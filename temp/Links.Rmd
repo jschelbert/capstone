@@ -1,0 +1,29 @@
+---
+title: "Temp Stuff"
+author: "Jakob Schelbert"
+date: "7 5 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Links
+* http://www.rdatamining.com/examples/text-mining
+* https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html
+* https://stackoverflow.com/questions/14249562/find-location-of-character-in-string
+* https://de.slideshare.net/odsc/tedkwartlerworkshop1
+* https://www.r-bloggers.com/basic-text-string-functions-in-r/
+* https://stackoverflow.com/questions/19226816/how-can-i-view-the-source-code-for-a-function
+* http://projecttemplate.net/packages.html
+* https://cran.r-project.org/web/views/NaturalLanguageProcessing.html
+
+
+
+## TM package
+* https://cran.r-project.org/web/packages/tm/vignettes/tm.pdf
+* https://cran.r-project.org/web/packages/tm/tm.pdf
+* https://cran.r-project.org/web/packages/tm/vignettes/extensions.pdf
+* https://www.jstatsoft.org/article/view/v025i05
+* 
