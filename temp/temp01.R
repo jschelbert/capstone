@@ -12,6 +12,7 @@ stopCluster(cl)
 
 
 ##### Reading data via tm package:
+library(tm)
 en_us <- VCorpus(DirSource("data/final/en_US/", encoding = "UTF-8"))
 
 
@@ -51,3 +52,49 @@ en_us[[3]] %>% content() %>% str_subset("biostats")
 # 6) How many tweets have the exact characters "A computer once beat me at chess, but it was no match for me at kickboxing". (I.e. the line matches those characters exactly.) --> 3
 en_us[[3]] %>% content() %>%  str_subset("A computer once beat me at chess, but it was no match for me at kickboxing")
 
+
+
+
+
+
+
+##### Week 2
+# using ngram package as tm seems a bit too much overhead
+alldata <- multiread("data/final/en_US/", extension="txt") #<- seems not to work!
+#Warnmeldungen:
+#  1: In FUN(X[[i]], ...) : Zeile 167155 scheint ein nul Zeichen zu enthalten
+#  2: In FUN(X[[i]], ...) : Zeile 268547 scheint ein nul Zeichen zu enthalten
+#  3: In FUN(X[[i]], ...) : Zeile 1274086 scheint ein nul Zeichen zu enthalten
+#  4: In FUN(X[[i]], ...) : Zeile 1759032 scheint ein nul Zeichen zu enthalten
+
+blogs <- readLines("data/final/en_US/en_US.blogs.txt")
+news <- readLines("data/final/en_US/en_US.news.txt")
+twitter <- readLines("data/final/en_US/en_US.twitter.txt") ##<- twitter seems to have some characters that cause an error in readLines!
+
+data("crude")
+tdm <- TermDocumentMatrix(crude, control = list(tokenize = BigramTokenizer))
+inspect(tdm[340:345,1:10])
+
+ng1 <- ngram(concatenate(blogs), n=1)
+pt1 <- get.phrasetable(ng1)
+
+ng2 <- ngram(concatenate(blogs), n=2)
+pt2 <- get.phrasetable(ng2)
+
+ng3 <- ngram(concatenate(blogs), n=3)
+pt3 <- get.phrasetable(ng3)
+
+ng4 <- ngram(concatenate(blogs), n=4)
+pt4 <- get.phrasetable(ng4)
+
+g <- ggplot(data=head(pt4, 20), aes(x=reorder(ngrams, freq), y=freq))
+g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+# Run this every time the work space is freed of unneccessary objects. It releases unused memory.
+gc()
+
+
+g <- ggplot(data=head(pt1, 20), aes(x=reorder(ngrams, -freq), y=freq))
+g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + labs(x="n-grams", y="frequency", title="Frequency of top-20 2-grams")
+
+string.summary(concatenate(blogs))

@@ -1,0 +1,217 @@
+---
+title: "Milestone Report - Week 2"
+subtite: "Capstone Project"
+author: "Jakob Schelbert"
+date: "13. May 2017"
+output:
+  html_document:
+    keep_md: yes
+    theme: cerulean
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1234)
+```
+
+# Executive summary
+This report acts as the starting point for our capstone project.
+The overall goal of the project is to develop an algorithm that predicts the next word a user will type on his mobile phone (or on a website) given this previous input.
+To achieve this, we will employ a machine learning algorithm that calculates the probabilities of the next word to be entered so the most likely word is suggested.
+Since the algorithm needs some data to learn from, we use the provided data set from SwiftKey.
+In this report we analyze the data set by stating some general information on the files and providing a deeper look on the frequencies of words and couples of several words.
+We also provide an outlook on the coming weeks and describe the activities in order to develop a customer ready algorithm.
+
+
+
+# Introduction
+
+
+Note that the execution of this R Markdown file requires a high amount of memory (16GB or more).
+We have included some measures to reduce the overall memory consumption by deleting no longer used objects and freeing up the memory.
+
+
+
+# Explorative analysis
+In this chapter we have a look at the provided data set.
+We will explore some basic features of the files and have a deeper look to the frequencies of words.
+For reading in the files we use the `tm` package as it provides a convenient way of loading all the files (and more later on).
+Unfortunately, the `tm` package seems to be rather slow for analyzing the frequencies.
+To overcome this, we are employing the `ngram` package which features very fast computation even for larger data sets.
+```{r libraries, warning=FALSE, echo=FALSE}
+suppressPackageStartupMessages({
+library(tm)
+library(ngram)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+})
+```
+
+We start by loading the data and separating each file into its own object.
+```{r load_data, cache=TRUE}
+en_us <- VCorpus(DirSource("../data/final/en_US/", encoding = "UTF-8"))
+blogs <- en_us[[1]] %>% content
+news <- en_us[[2]] %>% content
+twitter <-en_us[[3]] %>% content
+```
+
+
+
+## General properties of the data set
+We first take a look at the general properties of the files provided in the data set before executing a deeper analysis of the content.
+```{r compute_summary, cache=TRUE}
+summary_blogs <- string.summary(concatenate(blogs))
+summary_news <- string.summary(concatenate(news))
+summary_twitter <- string.summary(concatenate(twitter))
+summary_all <- data.frame(set=c("blogs", "news", "twitter"), 
+                          lines=sapply(list(blogs, news, twitter), length),
+                          characters=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 1),
+                          letters=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 2),
+                          whitespace=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 3),
+                          punctuation=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 4),
+                          digits=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 5),
+                          words=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 6),
+                          sentences=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 7))
+kable(summary_all)
+```
+
+From the table we can observe some interesting characteristics.
+For example the 140 character limit on twitter can clearly be observed.
+The file has the most lines of text but at the same time fewer chacters compared to the other files.
+In the news file the number of digits is more than twice the number compared to the other two files.
+This could be explained by the nature of the content as news articles often state precise numbers in the text.
+
+
+
+## Frequencies of words and n-grams
+In this chapter we have a look at the frequencies of words and **n-grams**.
+An n-gram is a contiguous sequence of $n$ items - in our case words - which can be formed from the texts in our data set.
+We start by concatenating all three data sets into one big object and convert all words to lower case.
+```{r concatenate_all_data, cache=TRUE}
+all_data <- concatenate(concatenate(blogs[1:100000]), 
+                        concatenate(news[1:100000]), 
+                        concatenate(twitter[1:100000])) %>% preprocess
+rm(blogs, news, twitter, en_us)
+invisible(gc())
+```
+
+### Frequencies of words
+```{r plot_freq_1grams, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=1)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 30), aes(x=reorder(ngrams, -freq), y=freq))
+g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + labs(x="words", y="frequency", title="Most frequent words")
+rm(ng, pt)
+invisible(gc())
+```
+
+There are `r ng_size` different words in the data set.
+The most frequent words in the data are common stop words, i.e. words that in some other natual language computing context are unwanted and should be removed.
+Examples are *the*, *and*, *of*, *to* and many more.
+In our case, however, they cannot be dropped as they are potential candidates for our prediction algorithm.
+
+
+### Analysis of bigrams (2-grams)
+Now we look at the bigrams, i.e. couples of words.
+```{r plot_freq_2grams, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=2)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 20), aes(x=reorder(ngrams, -freq), y=freq))
+g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + labs(x="n-grams", y="frequency", title="Frequency of top-20 2-grams")
+rm(ng, pt)
+invisible(gc())
+```
+
+There are `r ng_size` different bigrams in the data set.
+One remarkable observation is that many bigrams contain the word the which is also the most frequent word.
+
+
+### Analysis of trigrams (3-grams)
+```{r plot_freq_3grams, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=3)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 20), aes(x=reorder(ngrams, -freq), y=freq))
+g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + labs(x="n-grams", y="frequency", title="Frequency of top-20 3-grams")
+rm(ng, pt)
+invisible(gc())
+```
+
+There are `r ng_size` different trigrams in the data set.
+Among the most frequent trigrams there already are some comon phases like "a lot of" or "a couple of".
+
+
+### Analysis of four-grams (4-grams)
+Finally, we have a look at the 4-grams for which we again provide the 20 most frequent ones in the following figure.
+```{r plot_freq_4grams, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=4)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 20), aes(x=reorder(ngrams, -freq), y=freq))
+g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + labs(x="n-grams", y="frequency", title="Frequency of top-20 4-grams")
+rm(ng, pt)
+invisible(gc())
+```
+
+There are `r ng_size` different four-grams in the data set.
+
+
+
+# Outline for prediction algorithm
+In the next weeks we will implement a prediction algorithm that is able to suggest the next word to be typed based on the words already provided by the user.
+To achieve this, we resort to n-grams that are a common utility in computer linguistic.
+An n-gram is a contiguous sequence of n items - in our case words - which can be formed from the texts in our data set.
+The prediction algorithm will use the frequencies of the n-grams to compute the next probable words based on the users entries.
+
+More formally, given $(n-1)$ words $w_{i-(n-1)}, \ldots, w_{i-1}$ the algorithm uses the probability $P(w_i|w_{i-(n-1)}, \ldots, w_{i-1})$ to find the most probably word $w_i$.
+By counting the frequency of the n-grams the probabilities can be approximated using the assumption that each word only depends on the (n-1) words.
+This referes to a Markov-chain model which is a very simplistic model of the underlying language.
+Nontheless, from a practical perspective is allow to build small models that have an appropriate accuracy and computation time for prediction.
+
+The prediction algorithm will also incorporate a mechanism to deal with n-grams that are not present in the training set.
+To deal with this problem smoothing techniques will be employed like Katz's back-off approach or even better algorithms like Kneser-Ney smoothing.
+
+# Way forward
+In the next weeks we have quite some tasks before us that are described in the following chapter.
+
+## Gathering additional data
+While the originally provided data is a good starting point, more data will very likely enable us to build more accurate models.
+In addition, there might be features in the current data that are not general and do not occur in other data sources.
+To reduce the risk of building our models on biased data, we will search for more data which we can use in our analysis and development.
+
+## Building the model
+The main part of the project will be focused on the development of a model that makes accurate predictions.
+In the academic literature there exist many approaches to tackle the problem.
+Our goal is to start with very basic models and successively enhance our existing model to increase accuracy, response time and decrease model size.
+
+## Fine tuning
+A crucial and potentially tricky part of designing the algorithm will be the part of finding the right balance between model size, accuracy and response time for prediction.
+With close alignment with our project sponsor we will run extensive studies of influencing parameters so at the end a model is found that suffices all requirements.
+
+## Extension: Additional languages
+While the main goal of the project will be to build a model based on the English language, the basic approach will also be feasible for other languages.
+If time permits it, the next language we will incorporate is German (since its the mother tonge of the author).
+
+
+
+# Summary
+As shown above the provided data set which consists of various texts from different sources is a good starting point for our the development of our algorithm.
+The exploratory data analysis shows a first impression on the distribution of n-grams which we will investigate further with additional data sources.
+Besides the task of getting additional data we will focus on building a prediction model based on n-grams.
+This model will predict the most likely word that a user wants to type next, based on the previous three or less words.
+
+
+
+# Appendix
+
+## Code
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE, tidy=TRUE}
+```
+
+## System setup and used package versions
+```{r}
+sessionInfo()
+```
