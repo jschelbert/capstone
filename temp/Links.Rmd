@@ -27,3 +27,18 @@ knitr::opts_chunk$set(echo = TRUE)
 * https://cran.r-project.org/web/packages/tm/vignettes/extensions.pdf
 * https://www.jstatsoft.org/article/view/v025i05
 * 
+
+
+## NLP
+* NLP course at Stanford: https://web.stanford.edu/~jurafsky/NLPCourseraSlides.html
+* Paper on different smoothing techniques: http://u.cs.biu.ac.il/~yogo/courses/mt2013/papers/chen-goodman-99.pdf
+* Kneser-Ney smoothing explained: http://smithamilli.com/blog/kneser-ney/
+* 
+
+
+
+## Additional corpora
+* http://www.statmt.org/wmt10/translation-task.html
+* http://www.statmt.org/wmt15/translation-task.html
+
+
