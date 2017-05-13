@@ -25,6 +25,13 @@ We also provide an outlook on the coming weeks and describe the activities in or
 
 
 # Introduction
+Predicting words is a task that can help a user when writing text on a mobile phone.
+With small displays it can be cumbersome and lengthy to write texts.
+Therefore, modern software keyboards offer some suggestions to the user that could be written next with one single click.
+This report is the starting point for the development of such an algorithm.
+More precisely, the overall goal is to build an algorithm that is able to predict the next word based on the previous input.
+As this algorithm will be based on machine learning procedures we also need some data to be used for training.
+We will explore the data set that is provided by [SwiftKey](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip) and outline the activities for the next weeks.
 
 
 Note that the execution of this R Markdown file requires a high amount of memory (16GB or more).
