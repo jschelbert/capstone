@@ -97,9 +97,9 @@ In this chapter we have a look at the frequencies of words and **n-grams**.
 An n-gram is a contiguous sequence of $n$ items - in our case words - which can be formed from the texts in our data set.
 We start by concatenating all three data sets into one big object and convert all words to lower case.
 ```{r concatenate_all_data, cache=TRUE}
-all_data <- concatenate(concatenate(blogs[1:100000]), 
-                        concatenate(news[1:100000]), 
-                        concatenate(twitter[1:100000])) %>% preprocess
+all_data <- concatenate(concatenate(sample(blogs, 100000)), 
+                        concatenate(sample(news, 100000)), 
+                        concatenate(sample(twitter, 100000))) %>% preprocess
 rm(blogs, news, twitter, en_us)
 invisible(gc())
 ```
@@ -168,7 +168,7 @@ There are `r ng_size` different four-grams in the data set.
 
 
 
-# Outline for prediction algorithm
+# Outline for the prediction algorithm
 In the next weeks we will implement a prediction algorithm that is able to suggest the next word to be typed based on the words already provided by the user.
 To achieve this, we resort to n-grams that are a common utility in computer linguistic.
 An n-gram is a contiguous sequence of n items - in our case words - which can be formed from the texts in our data set.
