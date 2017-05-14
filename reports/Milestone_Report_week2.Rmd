@@ -95,17 +95,17 @@ This could be explained by the nature of the content as news articles often stat
 ## Frequencies of words and n-grams
 In this chapter we have a look at the frequencies of words and **n-grams**.
 An n-gram is a contiguous sequence of $n$ items - in our case words - which can be formed from the texts in our data set.
-We start by concatenating all three data sets into one big object and convert all words to lower case.
+We start by concatenating 100000 random samples from each three data sets into one big object and convert all words to lower case.
 ```{r concatenate_all_data, cache=TRUE}
-all_data <- concatenate(concatenate(sample(blogs, 100000)), 
-                        concatenate(sample(news, 100000)), 
-                        concatenate(sample(twitter, 100000))) %>% preprocess
+ all_data <- concatenate(concatenate(sample(blogs, 100000)), 
+                         concatenate(sample(news, 100000)), 
+                         concatenate(sample(twitter, 100000))) %>% preprocess
 rm(blogs, news, twitter, en_us)
 invisible(gc())
 ```
 
 ### Frequencies of words
-```{r plot_freq_1grams, echo=FALSE}
+```{r plot_freq_1grams, echo=FALSE, cache=TRUE}
 ng <- ngram(concatenate(all_data), n=1)
 ng_size <- ng@ngsize
 pt <- get.phrasetable(ng)
@@ -123,7 +123,7 @@ In our case, however, they cannot be dropped as they are potential candidates fo
 
 ### Analysis of bigrams (2-grams)
 Now we look at the bigrams, i.e. couples of words.
-```{r plot_freq_2grams, echo=FALSE}
+```{r plot_freq_2grams, echo=FALSE, cache=TRUE}
 ng <- ngram(concatenate(all_data), n=2)
 ng_size <- ng@ngsize
 pt <- get.phrasetable(ng)
@@ -133,12 +133,12 @@ rm(ng, pt)
 invisible(gc())
 ```
 
-There are `r ng_size` different bigrams in the data set.
+There are `r ng_size` different bigrams in the sample from the data set.
 One remarkable observation is that many bigrams contain the word the which is also the most frequent word.
 
 
 ### Analysis of trigrams (3-grams)
-```{r plot_freq_3grams, echo=FALSE}
+```{r plot_freq_3grams, echo=FALSE, cache=TRUE}
 ng <- ngram(concatenate(all_data), n=3)
 ng_size <- ng@ngsize
 pt <- get.phrasetable(ng)
@@ -148,13 +148,13 @@ rm(ng, pt)
 invisible(gc())
 ```
 
-There are `r ng_size` different trigrams in the data set.
+There are `r ng_size` different trigrams in the sample from the data set.
 Among the most frequent trigrams there already are some comon phases like "a lot of" or "a couple of".
 
 
 ### Analysis of four-grams (4-grams)
 Finally, we have a look at the 4-grams for which we again provide the 20 most frequent ones in the following figure.
-```{r plot_freq_4grams, echo=FALSE}
+```{r plot_freq_4grams, echo=FALSE, cache=TRUE}
 ng <- ngram(concatenate(all_data), n=4)
 ng_size <- ng@ngsize
 pt <- get.phrasetable(ng)
@@ -164,7 +164,7 @@ rm(ng, pt)
 invisible(gc())
 ```
 
-There are `r ng_size` different four-grams in the data set.
+There are `r ng_size` different four-grams in the sample from the data set.
 
 
 
