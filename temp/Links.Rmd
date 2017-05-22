@@ -28,6 +28,17 @@ knitr::opts_chunk$set(echo = TRUE)
 * https://www.jstatsoft.org/article/view/v025i05
 * 
 
+## ngram package
+
+## quanteda package
+* https://cran.r-project.org/web/packages/quanteda/vignettes/quickstart.html#creating-and-working-with-a-corpus
+* also needed: `devtools::install_github("kbenoit/readtext")`
+
+
+## microbenchmark package
+* http://adv-r.had.co.nz/Profiling.html#code-organisation
+
+
 
 ## NLP
 * NLP course at Stanford: https://web.stanford.edu/~jurafsky/NLPCourseraSlides.html

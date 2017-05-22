@@ -98,3 +98,87 @@ g <- ggplot(data=head(pt1, 20), aes(x=reorder(ngrams, -freq), y=freq))
 g + geom_col() + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + labs(x="n-grams", y="frequency", title="Frequency of top-20 2-grams")
 
 string.summary(concatenate(blogs))
+
+
+
+
+
+
+
+## quanteda
+library(quanteda)
+textdata <- readtext::readtext("data/final/en_US/en_US.blogs.txt")
+tok <- tokens(textdata$text, what="word", remove_numbers=TRUE, remove_punct = TRUE,
+       remove_symbols = TRUE, remove_separators = TRUE,
+       remove_twitter = TRUE, remove_hyphens = FALSE, remove_url = TRUE,
+       ngrams = 2L)
+
+
+## tidytext
+library(tidyr)
+library(dplyr)
+library(tidytext)
+tok <-  textdata %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
+bigrams_separated <- tok %>% separate(bigram, c("word1", "word2"), sep = " ")
+
+
+
+## Benchmark for finding words in a data frame
+library(microbenchmark)
+bigram_df <- bigrams_separated %>% select(-doc_id) %>% head(100000)
+rm(austen_bigrams, tok, bigrams_separated, textdata)
+gc()
+count_df1 <- bigram_df %>% count(word1, word2, sort=TRUE)
+cols <- c("word1", "word2")
+count_df2 <- bigram_df %>% count(word1, word2, sort=TRUE)
+count_df2[cols] <- lapply(count_df2[cols], factor)
+
+testwords1 <- c("system", "capitalism")
+testwords2 <- c("zoom", "lens")
+testwords3 <- c("the", "size")
+testwords4 <- c("do", "i")
+testwords5 <- c("from", "the")
+testwords6 <- c("zoom", "blashfdj")
+filter(count_df1, word1==testwords1[1], word2==testwords1[2])
+
+
+microbenchmark(filter(count_df1, word1==testwords1[1], word2==testwords1[2]),
+               filter(count_df2, word1==testwords1[1], word2==testwords1[2]),
+               times=10L)
+
+microbenchmark(filter(count_df1, word1==testwords2[1], word2==testwords2[2]),
+               filter(count_df2, word1==testwords2[1], word2==testwords2[2]),
+               times=10L)
+
+microbenchmark(filter(count_df1, word1==testwords3[1], word2==testwords3[2]),
+               filter(count_df2, word1==testwords3[1], word2==testwords3[2]),
+               times=10L)
+
+microbenchmark(filter(count_df1, word1==testwords4[1], word2==testwords4[2]),
+               filter(count_df2, word1==testwords4[1], word2==testwords4[2]),
+               times=10L)
+
+microbenchmark(filter(count_df1, word1==testwords5[1], word2==testwords5[2]),
+               filter(count_df2, word1==testwords5[1], word2==testwords5[2]),
+               times=10L)
+
+microbenchmark(filter(count_df1, word1==testwords6[1], word2==testwords6[2]),
+               filter(count_df2, word1==testwords6[1], word2==testwords6[2]),
+               times=10L)
+
+## => factor columns are about a factor 10 slower (no pun intended :D). We should use character as class for columns containing words
+
+
+## for 4-grams what is better? data frame with colums "word123 word4" or data frame with columns "word1 word2 word3 word4"?
+
+
+
+
+blah <- austen_books() %>%
+    unnest_tokens(trigram, text, token = "ngrams", n = 4) %>%
+    separate(trigram, c("word1", "word2", "word3", "word4"), sep = " ") %>%
+    count(word1, word2, word3, word4, sort = TRUE)
+
+
+
+
