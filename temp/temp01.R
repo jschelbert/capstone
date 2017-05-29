@@ -107,21 +107,182 @@ string.summary(concatenate(blogs))
 
 ## quanteda
 library(quanteda)
-textdata <- readtext::readtext("data/final/en_US/en_US.blogs.txt")
-tok <- tokens(textdata$text, what="word", remove_numbers=TRUE, remove_punct = TRUE,
-       remove_symbols = TRUE, remove_separators = TRUE,
-       remove_twitter = TRUE, remove_hyphens = FALSE, remove_url = TRUE,
-       ngrams = 2L)
+library(readtext)
+library(tidyr)
+library(dplyr)
+library(data.table)
+
+folder <- "data/final/en_US/"
+folder <- "data/samples/en_US/"
+folder <- "data/samples_small/en_US/"
+
+textdata <- readtext::readtext(paste0(folder, "*.txt")) %>% quanteda::corpus()
+
+#        User      System verstrichen 
+#      64.110       4.188      68.324 
+
+tok_sentences <- textdata %>% tokenize(what="sentence", remove_twitter = TRUE, verbose=TRUE, simplify=TRUE)
+#        User      System verstrichen 
+#      73.819      19.556      93.375 
+mycorpus <- tok_sentences %>% char_tolower() %>% quanteda::corpus()
+#        User      System verstrichen 
+#      27.087       1.550      28.633
+
+rm(tok_sentences, textdata)
+gc()
+
+elapsedtime <- system.time(grams <- tokens(mycorpus, what="word", remove_numbers=TRUE, remove_punct = TRUE,
+                                     remove_symbols = TRUE, remove_separators = TRUE,
+                                     remove_twitter = TRUE, remove_hyphens = FALSE, remove_url = TRUE,
+                                     ngrams = 1L, verbose=TRUE))
+#        User      System verstrichen 
+#     119.572       4.470     124.127 
+saveRDS(grams, paste0(folder, "1-grams.rds"))
+#gram_1 <- readRDS(paste0(folder, "1-grams.rds"))
+rm(gram)
+gc()
+
+
+mycorpus <- tokens(mycorpus, what="word", remove_numbers=TRUE, remove_punct = TRUE,
+                     remove_symbols = TRUE, remove_separators = TRUE,
+                     remove_twitter = TRUE, remove_hyphens = FALSE, remove_url = TRUE,
+                     ngrams = 1L, verbose=TRUE)
+
+for(i in 2:5){
+  elapsedtime <- system.time(grams <- tokens_ngrams(mycorpus, n = i))
+  saveRDS(grams, paste0(folder, i, "-grams.rds"))
+  print(paste0(i,"-grams generated with:"))
+  print(elapsedtime)
+  rm(grams)
+  gc()
+}
+
+
+
 
 
 ## tidytext
 library(tidyr)
 library(dplyr)
 library(tidytext)
-tok <-  textdata %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
+library(quanteda)
+folder <- "data/samples_small/en_US/"
+textdata <- readtext::readtext(paste0(folder, "*.txt")) %>% quanteda::corpus()
+tok_sentences <- textdata %>% tokenize(what="sentence", remove_twitter = TRUE, verbose=TRUE, simplify=TRUE)
+df_tok_sentences <- data_frame(text = tok_sentences)
+
+tok <-  df_tok_sentences %>% unnest_tokens(word, text)
+tok %>% count(word, sort = TRUE) 
+
+
+tok <- df_tok_sentences %>% unnest_tokens(bigram, text, token="ngrams", n=2)
 bigrams_separated <- tok %>% separate(bigram, c("word1", "word2"), sep = " ")
+bigrams_separated %>% count(word1, word2, sort = TRUE)
 
 
+
+# generate frequency tables:
+library(tidyr)
+library(dplyr)
+library(tidytext)
+library(quanteda)
+folder <- "data/samples/en_US/"
+textdata <- readtext::readtext(paste0(folder, "*.txt")) %>% quanteda::corpus()
+tok_sentences <- textdata %>% tokenize(what="sentence", remove_twitter = TRUE, verbose=TRUE, simplify=TRUE)
+df_tok_sentences <- data_frame(text = tok_sentences)
+rm(textdata, tok_sentences)
+gc()
+tok1 <-  df_tok_sentences %>% unnest_tokens(ngram, text) %>% count(word, sort = TRUE) 
+saveRDS(tok1, paste0(folder, "1-grams_tidy.rds"))
+for(i in 2:5){
+  elapsedtime <- system.time({
+    tok <- df_tok_sentences %>% unnest_tokens(ngram, text, token="ngrams", n=i) %>% count(ngram, sort = TRUE)
+    })
+  saveRDS(tok, paste0(folder, i, "-grams_tidy.rds"))
+  print(paste0(i,"-grams generated with:"))
+  print(elapsedtime)
+  rm(tok)
+  gc()
+}
+
+#tok <- readRDS(paste0(folder, i, "-grams.rds"))
+ngrams_1 <- readRDS(paste0(folder, "1-grams_tidy.rds"))
+ngrams_2 <- readRDS(paste0(folder, "2-grams_tidy.rds"))
+ngrams_3 <- readRDS(paste0(folder, "3-grams_tidy.rds"))
+ngrams_4 <- readRDS(paste0(folder, "4-grams_tidy.rds"))
+ngrams_5 <- readRDS(paste0(folder, "5-grams_tidy.rds"))
+
+threshold_ngrams_1 <- 1
+threshold_ngrams_2 <- 4
+threshold_ngrams_3 <- 4
+threshold_ngrams_4 <- 4
+threshold_ngrams_5 <- 4
+
+ngrams_1_nrow_before <- nrow(ngrams_1)
+ngrams_1 <- ngrams_1 %>% filter(n>threshold_ngrams_1)
+ngrams_1_nrow_after <- nrow(ngrams_1)
+compression_ngrams_1 <- ngrams_1_nrow_after/ngrams_1_nrow_before
+
+ngrams_2_nrow_before <- nrow(ngrams_2)
+ngrams_2 <- ngrams_2 %>% filter(n>threshold_ngrams_2)
+ngrams_2_nrow_after <- nrow(ngrams_2)
+compression_ngrams_2 <- ngrams_2_nrow_after/ngrams_2_nrow_before
+
+ngrams_3_nrow_before <- nrow(ngrams_3)
+ngrams_3 <- ngrams_3 %>% filter(n>threshold_ngrams_3)
+ngrams_3_nrow_after <- nrow(ngrams_3)
+compression_ngrams_3 <- ngrams_3_nrow_after/ngrams_3_nrow_before
+
+ngrams_4_nrow_before <- nrow(ngrams_4)
+ngrams_4 <- ngrams_4 %>% filter(n>threshold_ngrams_4)
+ngrams_4_nrow_after <- nrow(ngrams_4)
+compression_ngrams_4 <- ngrams_4_nrow_after/ngrams_4_nrow_before
+
+ngrams_5_nrow_before <- nrow(ngrams_5)
+ngrams_5 <- ngrams_5 %>% filter(n>threshold_ngrams_5)
+ngrams_5_nrow_after <- nrow(ngrams_5)
+compression_ngrams_5 <- ngrams_5_nrow_after/ngrams_5_nrow_before
+
+
+ngrams_5 <- ngrams_5 %>% separate(ngram, c("word1", "word2", "word3", "word4", "word"), sep = " ") %>% unite(ngram, word1, word2, word3, word4, sep = " ") %>% as.data.table()
+ngrams_4 <- ngrams_4 %>% separate(ngram, c("word1", "word2", "word3", "word"), sep = " ") %>% unite(ngram, word1, word2, word3, sep = " ")
+ngrams_3 <- ngrams_3 %>% separate(ngram, c("word1", "word2", "word"), sep = " ") %>% unite(ngram, word1, word2, sep = " ")
+ngrams_2 <- ngrams_2 %>% separate(ngram, c("word1", "word"), sep = " ")
+
+
+
+score_stupid_backoff <- function(s){
+  # Funciton assumes a clean string with only " " as a separator without additional whitespaces
+  
+  # split string s into different tokens
+  s_tokens <- strsplit(s, " ")
+
+  s_is_5gram <- FALSE
+  s_is_4gram <- FALSE
+  s_is_3gram <- FALSE
+  s_is_2gram <- FALSE
+  s_is_1gram <- FALSE
+  
+  switch(length(s_tokens),
+    5 = s_is_5gram <- TRUE,
+    4 = s_is_4gram <- TRUE,
+    3 = s_is_3gram <- TRUE,
+    2 = s_is_2gram <- TRUE,
+    1 = s_is_1gram <- TRUE,
+    stop("something went wrong with ", s)
+  )
+  
+  count_ngram_5 <- ngrams_5 %>% filter(ngram==s) %>% .[[2]]
+  if(length(count_ngram_5)==0){
+    
+  }
+  
+
+  if (s_is_5gram){
+    s_score <- ngrams_5
+  }
+  
+}
 
 ## Benchmark for finding words in a data frame
 library(microbenchmark)
@@ -178,6 +339,10 @@ blah <- austen_books() %>%
     unnest_tokens(trigram, text, token = "ngrams", n = 4) %>%
     separate(trigram, c("word1", "word2", "word3", "word4"), sep = " ") %>%
     count(word1, word2, word3, word4, sort = TRUE)
+
+
+
+
 
 
 
