@@ -3,8 +3,14 @@ compute_score_stupid_backoff <- function(s, lambda=.4){
   s_tokens <- strsplit(s, " ")[[1]]
   score <- 0
   s_length <- length(s_tokens)
-  
-  if(s_length==5){
+ 
+  if(s_length==6){
+    count_ngram_6 <- ngrams_6 %>% filter(ngram==s) %>% .[[2]]
+    count_ngram_5 <- ngrams_5 %>% filter(ngram==paste(s_tokens[1:5], collapse=" ")) %>% .[[2]]
+    score <- 1/lambda * count_ngram_6/count_ngram_5
+    return(score)
+  } 
+  else if(s_length==5){
     count_ngram_5 <- ngrams_5 %>% filter(ngram==s) %>% .[[2]]
     count_ngram_4 <- ngrams_4 %>% filter(ngram==paste(s_tokens[1:4], collapse=" ")) %>% .[[2]]
     score <- count_ngram_5/count_ngram_4

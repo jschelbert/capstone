@@ -80,11 +80,11 @@ ngrams_5 <- readRDS(paste0(folder, "5-grams_tidy.rds"))
 source('munge/compute_score_stupid_backoff.R')
 
 ## usage of data.table package
-ngrams_5 <- ngrams_5 %>% as.data.table()
-ngrams_4 <- ngrams_4 %>% as.data.table()
-ngrams_3 <- ngrams_3 %>% as.data.table()
-ngrams_2 <- ngrams_2 %>% as.data.table()
-ngrams_1 <- ngrams_1 %>% as.data.table()
+setDT(ngrams_5)
+setDT(ngrams_4)
+setDT(ngrams_3)
+setDT(ngrams_2)
+setDT(ngrams_1)
 
 ngrams_5[, `:=`(sb_score = compute_score_stupid_backoff_DT(ngram))]
 ngrams_4[, `:=`(sb_score = compute_score_stupid_backoff_DT(ngram))]
@@ -141,20 +141,43 @@ ngrams_5 <- ngrams_5 %>% filter(n>=threshold_ngrams_5) %>% arrange(desc(sb_score
 ngrams_5_nrow_after <- nrow(ngrams_5)
 compression_ngrams_5 <- ngrams_5_nrow_after/ngrams_5_nrow_before
 
+setkey(ngrams_5, ngram)
+setkey(ngrams_4, ngram)
+setkey(ngrams_3, ngram)
+setkey(ngrams_2, ngram)
+setkey(ngrams_1, ngram)
+
+setorder(ngrams_5, ngram, -sb_score)
+setorder(ngrams_4, ngram, -sb_score)
+setorder(ngrams_3, ngram, -sb_score)
+setorder(ngrams_2, ngram, -sb_score)
+setorder(ngrams_1, -sb_score)
+
 saveRDS(ngrams_5, paste0(folder, "5-grams_DT_sb_threshold.rds"))
 saveRDS(ngrams_4, paste0(folder, "4-grams_DT_sb_threshold.rds"))
 saveRDS(ngrams_3, paste0(folder, "3-grams_DT_sb_threshold.rds"))
 saveRDS(ngrams_2, paste0(folder, "2-grams_DT_sb_threshold.rds"))
 saveRDS(ngrams_1, paste0(folder, "1-grams_DT_sb_threshold.rds"))
 
+###############################################################################
+
+ngrams_5 <- readRDS(paste0(folder, "5-grams_DT_sb_threshold.rds"))
+ngrams_4 <- readRDS(paste0(folder, "4-grams_DT_sb_threshold.rds"))
+ngrams_3 <- readRDS(paste0(folder, "3-grams_DT_sb_threshold.rds"))
+ngrams_2 <- readRDS(paste0(folder, "2-grams_DT_sb_threshold.rds"))
+ngrams_1 <- readRDS(paste0(folder, "1-grams_DT_sb_threshold.rds"))
+setDT(ngrams_5)
+setDT(ngrams_4)
+setDT(ngrams_3)
+setDT(ngrams_2)
+setDT(ngrams_1)
 
 number_of_suggestions <- 5
 
-ngrams_5 <- ngrams_5[,head(.SD, number_of_suggestions), ngram]
 ngrams_5 <- ngrams_5[ngrams_5[, head(.I, number_of_suggestions), by=ngram]$V1]
-ngrams_4 <- ngrams_4[,.SD[1:number_of_suggestions], by=ngram]
-ngrams_3 <- ngrams_3[,.SD[1:number_of_suggestions], by=ngram]
-ngrams_2 <- ngrams_2[,.SD[1:number_of_suggestions], by=ngram]
+ngrams_4 <- ngrams_4[ngrams_4[, head(.I, number_of_suggestions), by=ngram]$V1]
+ngrams_3 <- ngrams_3[ngrams_3[, head(.I, number_of_suggestions), by=ngram]$V1]
+ngrams_2 <- ngrams_2[ngrams_2[, head(.I, number_of_suggestions), by=ngram]$V1]
 
 saveRDS(ngrams_5, paste0(folder, "5-grams_DT_sb_threshold_reduced.rds"))
 saveRDS(ngrams_4, paste0(folder, "4-grams_DT_sb_threshold_reduced.rds"))
@@ -164,7 +187,12 @@ saveRDS(ngrams_1, paste0(folder, "1-grams_DT_sb_threshold_reduced.rds"))
 
 
 
+
+###############################################################################
+###############################################################################
 ## usage of dplyr and data.frame
+###############################################################################
+###############################################################################
 ngrams_5 <- ngrams_5 %>% mutate(sb_score=compute_score_stupid_backoff(ngram))
 ngrams_4 <- ngrams_4 %>% mutate(sb_score=compute_score_stupid_backoff(ngram))
 ngrams_3 <- ngrams_3 %>% mutate(sb_score=compute_score_stupid_backoff(ngram))
