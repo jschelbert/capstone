@@ -159,6 +159,8 @@ compute_reduced_ngrams_suggestions <- function(folder,
                            nrows_after_reduction=NA_integer_,
                            size_before=NA_real_,
                            size_after=NA_real_)
+  ngrams_1 <- readRDS(paste0(folder, 1, "-grams_DT_sb_threshold.rds"))
+  saveRDS(ngrams_1, paste0(folder, 1, "-grams_DT_sb_threshold_reduced.rds"))
   
   for(i in 2:ifelse(use_6_ngrams, 6, 5)){
     ngrams_i <- readRDS(paste0(folder, i, "-grams_DT_sb_threshold.rds"))
