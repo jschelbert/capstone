@@ -75,14 +75,14 @@ predict_stupid_backoff_DT <- function(s, n_pred=5){
   }
   
   # trying 5-grams to estimate word
-  prediction_5 <- ngrams_5[ngram==s, word] %>% head(n_pred)
+  prediction_5 <- ngrams_5[s, word, nomatch=0] %>% head(n_pred)
 
   # if no word is found, use lower n-grams
   if(length(prediction_5)==n_pred){
     return(prediction_5)
   }
   else{
-    prediction_4 <- ngrams_4[ngram==paste(s_tokens[2:4], collapse=" "), word] %>% head(n_pred-length(prediction_5))
+    prediction_4 <- ngrams_4[paste(s_tokens[2:4], collapse=" "), word, nomatch=0] %>% head(n_pred-length(prediction_5))
     prediction <- c(prediction_5, prediction_4)
   }
   
@@ -90,7 +90,7 @@ predict_stupid_backoff_DT <- function(s, n_pred=5){
     return(prediction)
   }
   else{
-    prediction_3 <- ngrams_3[ngram==paste(s_tokens[3:4], collapse=" "), word] %>% head(n_pred-length(prediction))
+    prediction_3 <- ngrams_3[paste(s_tokens[3:4], collapse=" "), word, nomatch=0] %>% head(n_pred-length(prediction))
     prediction <- c(prediction, prediction_3)
   } 
   
@@ -98,7 +98,7 @@ predict_stupid_backoff_DT <- function(s, n_pred=5){
     return(prediction)
   }
   else{
-    prediction_2 <- ngrams_2[ngram==paste(s_tokens[4], collapse=" "), word] %>% head(n_pred-length(prediction))
+    prediction_2 <- ngrams_2[paste(s_tokens[4], collapse=" "), word, nomatch=0] %>% head(n_pred-length(prediction))
     prediction <- c(prediction, prediction_2)
   }  
   
