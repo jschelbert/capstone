@@ -1,9 +1,10 @@
+#folder <- "data/samples_supersmall/en_US/"
 #folder <- "data/samples_small/en_US/"
 #folder <- "data/samples/en_US/"
-folder <- "data/final/en_US/"
-folder <- "data/final/de_DE/"
+#folder <- "data/final/en_US/"
+#folder <- "data/final/de_DE/"
+folder <- "data/news-2014/en_US/"
 
-folder <- "data/samples_supersmall/en_US/"
 
 setwd("/Volumes/Daten/Dokumente/workspace/Coursera/Data-Science-Specialization/capstone")
 source("munge/generate_frequency_tables.R")
@@ -15,7 +16,7 @@ benchmark_results <- data.frame()
 df_threshold <- data.frame()
 df_suggestions <- data.frame()
 
-for(threshold in 2:5){
+for(threshold in 4){
   setwd("/Volumes/Daten/Dokumente/workspace/Coursera/Data-Science-Specialization/capstone")
   df_threshold_i <- compute_reduced_ngrams_threshold(folder,
                                    number_of_ngrams_1=50,

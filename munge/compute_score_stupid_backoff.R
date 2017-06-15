@@ -50,6 +50,12 @@ compute_score_stupid_backoff_DT <- function(s, lambda=.4){
   score <- 0
   s_length <- length(s_tokens)
   
+  if(s_length==6){
+    count_ngram_6 <- ngrams_6[ngram==s, n]
+    count_ngram_5 <- ngrams_5[ngram==paste(s_tokens[1:5], collapse=" "), n]
+    score <- count_ngram_6/count_ngram_5
+    return(score)
+  }  
   if(s_length==5){
     count_ngram_5 <- ngrams_5[ngram==s, n]
     count_ngram_4 <- ngrams_4[ngram==paste(s_tokens[1:4], collapse=" "), n]
@@ -70,7 +76,7 @@ compute_score_stupid_backoff_DT <- function(s, lambda=.4){
   }
   else if(s_length==2){
     count_ngram_2 <- ngrams_2[ngram==s, n]
-    count_ngram_1 <- ngrams_4[ngram==s_tokens[1], n]
+    count_ngram_1 <- ngrams_1[ngram==s_tokens[1], n]
     score <- lambda * lambda * lambda * count_ngram_2/count_ngram_1
     return(score)
   }
