@@ -53,7 +53,7 @@ compute_score_stupid_backoff_DT <- function(s, lambda=.4){
   if(s_length==6){
     count_ngram_6 <- ngrams_6[ngram==s, n]
     count_ngram_5 <- ngrams_5[ngram==paste(s_tokens[1:5], collapse=" "), n]
-    score <- count_ngram_6/count_ngram_5
+    score <- 1/lambda * count_ngram_6/count_ngram_5
     return(score)
   }  
   if(s_length==5){
@@ -87,3 +87,7 @@ compute_score_stupid_backoff_DT <- function(s, lambda=.4){
   }
   return(score) # return 0 if length 0
 }
+
+
+
+
