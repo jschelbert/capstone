@@ -23,11 +23,11 @@ if(use_6_ngrams){
 # We store the number of n-grams with count 1-4 in the following matrix for n=1-5 (or 6)
 
 if(use_6_ngrams){
-  #all_ngrams <- list(ngrams_1, ngrams_2, ngrams_3, ngrams_4, ngrams_5, ngrams_6)
+  all_ngrams <- list(ngrams_1, ngrams_2, ngrams_3, ngrams_4, ngrams_5, ngrams_6)
   mkn_n <- sapply(list(ngrams_1, ngrams_2, ngrams_3, ngrams_4, ngrams_5, ngrams_6), function(x){sapply(1:4, function(i){x[n==i,.N]})})
   max_n <- 6
 } else {
-  #all_ngrams <- list(ngrams_1, ngrams_2, ngrams_3, ngrams_4, ngrams_5)
+  all_ngrams <- list(ngrams_1, ngrams_2, ngrams_3, ngrams_4, ngrams_5)
   mkn_n <- sapply(list(ngrams_1, ngrams_2, ngrams_3, ngrams_4, ngrams_5), function(x){sapply(1:4, function(i){x[n==i,.N]})})
   max_n <- 5
 }
@@ -66,19 +66,75 @@ ngrams_3[,mkn:=0]
 ngrams_4[,mkn:=0]
 ngrams_5[,mkn:=0]
 
-# unigrams need special treatment...
-# p0 <- 1 / (obj$frequencies[[1]]$unique_entries - 1); ==> 1/nrow(ngrams_1)
-# p1 <- 1 / (obj$frequencies[[2]]$unique_entries - 1); ==> 1/nrow(ngrams_2)
+
 
 temp <- merge(ngrams_1, ngrams_2, all.x = TRUE, by.x = "ngram", by.y = "word")[, .N, by="ngram"]
-ngrams_1[temp, mkn := N/nrow(ngrams_2) + 1/nrow(ngrams_1)] # Do we need to add 1/|vocabulary| ?
-
+all_ngrams[[1]][temp, mkn := N/nrow(ngrams_2) + 1/nrow(ngrams_1)] # Do we need to add 1/|vocabulary| ?
+rm(temp)
 
 #TODO: Wie mache ich das für einen Join mit sich selbst? Brauche ich den überhaupt?
 #temp <- ngrams_2[, count_word:=sum(n), by="word"]
 #setnames(temp, old="N", new="count_word")
 #setkey(temp, "word")
 #test <- ngrams_2[temp, , on="word"]
+
+
+all_ngrams[[2]][, count_word:=sum(n), by="ngram"]
+all_ngrams[[2]] <- merge(all_ngrams[[2]], mkn_N1, all.x=TRUE, by="ngram")
+all_ngrams[[2]] <- merge(all_ngrams[[2]], mkn_N2, all.x=TRUE, by="ngram")
+all_ngrams[[2]] <- merge(all_ngrams[[2]], mkn_N3, all.x=TRUE, by="ngram")
+all_ngrams[[2]][is.na(count_N1), count_N1 := 0]
+all_ngrams[[2]][is.na(count_N2), count_N2 := 0]
+all_ngrams[[2]][is.na(count_N3), count_N3 := 0]
+#???? brauche eigentlich nur mkn von ngrams_1
+all_ngrams[[2]] <- merge(all_ngrams[[2]], all_ngrams[[1]], all.x=TRUE, by.x = "word", by.y = "ngram")
+
+all_ngrams[[2]][, mkn := (pmax(n.x - mkn_D[2, 1 + pmin(3, n.x)], 0)) / count_word + ((mkn_D[2, 2] * count_N1 + mkn_D[2, 3] * count_N2 + mkn_D[2, 4] * count_N3) / count_word) * mkn.y]
+all_ngrams[[2]][,`:=`(mkn.x = NULL, count_word = NULL, count_N1 = NULL, count_N2 = NULL, count_N3 = NULL, n.y = NULL, sb_score.y = NULL, mkn.y = NULL)]
+setnames(all_ngrams[[2]], old="n.x", new="n")
+
+
+for (ci in 3:max_n){
+  all_ngrams[[ci]][, count_word:=sum(n), by="ngram"]
+  all_ngrams[[ci]] <- merge(all_ngrams[[ci]], mkn_N1, all.x=TRUE, by="ngram")
+  all_ngrams[[ci]] <- merge(all_ngrams[[ci]], mkn_N2, all.x=TRUE, by="ngram")
+  all_ngrams[[ci]] <- merge(all_ngrams[[ci]], mkn_N3, all.x=TRUE, by="ngram")
+  all_ngrams[[ci]][is.na(count_N1), count_N1 := 0]
+  all_ngrams[[ci]][is.na(count_N2), count_N2 := 0]
+  all_ngrams[[ci]][is.na(count_N3), count_N3 := 0]
+  #???? brauche eigentlich nur mkn von ngrams_1
+  all_ngrams[[ci]][, ngram_last := paste(tail(str_split(ngram, pattern=" "), ci - 1), collapse = " ")] <-- KLAPPT NET!
+  all_ngrams[[ci]] <- merge(all_ngrams[[ci]], all_ngrams[[ci - 1]], all.x=TRUE, by.x=c("ngram_last", "word"), by.y = c("ngram", "word"))
+  
+  all_ngrams[[ci]][, mkn := (pmax(n.x - mkn_D[ci, 1 + pmin(3, n.x)], 0)) / count_word + 
+                    ((mkn_D[ci, 2] * count_N1 + 
+                        mkn_D[ci, 3] * count_N2 + 
+                        mkn_D[ci, 4] * count_N3) / count_word) * mkn.y]
+  all_ngrams[[ci]][,`:=`(mkn.x = NULL, count_word = NULL, count_N1 = NULL, count_N2 = NULL, 
+                        count_N3 = NULL, n.y = NULL, sb_score.y = NULL, 
+                        mkn.y = NULL, word.y = NULL)]
+  setnames(all_ngrams[[ci]], old="n.x", new="n")
+  setnames(all_ngrams[[ci]], old="sb_score.x", new="sb_score")
+  try({setnames(all_ngrams[[ci]], old="word.x", new="word")})
+}
+
+
+
+
+# Manual tries --------------------------------------------------------------------------------
+
+
+temp <- merge(ngrams_1, ngrams_2, all.x = TRUE, by.x = "ngram", by.y = "word")[, .N, by="ngram"]
+ngrams_1[temp, mkn := N/nrow(ngrams_2) + 1/nrow(ngrams_1)] # Do we need to add 1/|vocabulary| ?
+rm(temp)
+
+#TODO: Wie mache ich das für einen Join mit sich selbst? Brauche ich den überhaupt?
+#temp <- ngrams_2[, count_word:=sum(n), by="word"]
+#setnames(temp, old="N", new="count_word")
+#setkey(temp, "word")
+#test <- ngrams_2[temp, , on="word"]
+
+
 ngrams_2[, count_word:=sum(n), by="ngram"]
 ngrams_2 <- merge(ngrams_2, mkn_N1, all.x=TRUE, by="ngram")
 ngrams_2 <- merge(ngrams_2, mkn_N2, all.x=TRUE, by="ngram")
@@ -87,14 +143,15 @@ ngrams_2[is.na(count_N1), count_N1 := 0]
 ngrams_2[is.na(count_N2), count_N2 := 0]
 ngrams_2[is.na(count_N3), count_N3 := 0]
 #???? brauche eigentlich nur mkn von ngrams_1
-test <- merge(ngrams_2, ngrams_1, all.x=TRUE, by="ngram")
+ngrams_2 <- merge(ngrams_2, ngrams_1, all.x=TRUE, by.x = "word", by.y = "ngram")
 
-test[, blah1 := (pmax(n.x - mkn_D[2, 1 + pmin(3, n.x)], 0)) / count_word + ((mkn_D[2, 2] * count_N1 + mkn_D[2, 3] * count_N2 + mkn_D[2, 4] * count_N3) / count_word) * mkn.y]
-test[, blah2 := (pmax(n.x - mkn_D[2, 1 + pmin(3, n.x)], 0)) / count_word]
-test[, blah3 := (pmax(n.x - mkn_D[2, 1 + pmin(3, n.x)], 0))]
-test[, blah4 := mkn_D[2, 1 + pmin(3, n.x)]]
-test[, blah5 := 1 + pmin(3, n.x)]
-test[, blah6 := ((mkn_D[2, 2] * count_N1 + mkn_D[2, 3] * count_N2 + mkn_D[2, 4] * count_N3) / count_word) * mkn.y]
+ngrams_2[, mkn := (pmax(n.x - mkn_D[2, 1 + pmin(3, n.x)], 0)) / count_word + ((mkn_D[2, 2] * count_N1 + mkn_D[2, 3] * count_N2 + mkn_D[2, 4] * count_N3) / count_word) * mkn.y]
+ngrams_2[,`:=`(mkn.x = NULL, count_word = NULL, count_N1 = NULL, count_N2 = NULL, count_N3 = NULL, n.y = NULL, sb_score.y = NULL, mkn.y = NULL)]
+setnames(ngrams_2, old="n.x", new="n")
+
+
+
+
 
 # get count of 2-grams that end with "word":
 temp <- ngrams_2[, .N, by="word"]
