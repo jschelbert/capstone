@@ -1,0 +1,33 @@
+---
+title: "PredWordR"
+subtitle: "Predicting words with Shiny and R"
+author: "Jakob Schelbert"
+date: "`r Sys.Date()`"
+output: 
+  revealjs::revealjs_presentation:
+    theme: "solarized"
+    transition: "slide"
+---
+
+## Introduction
+Predicting words is a task that can help a user when writing text on a mobile phone.
+With small displays it can be cumbersome and lengthy to write texts.
+
+
+## Development of the app
+In the app we provide two models that are based on n-grams
+
+
+## Used language models
+
+
+
+## Future extensions
+For the future several extensions could be implemented to enhance the app:
+
+* Add additional languages for predicting words.
+* Use neural net approach instead of the classical n-gram-based algorithms. A first alpha test is given [here](http://www.schelberts.de/shinyapps/lstm_text_predict) (unfortunately does not work directly on shinyapps.io).
+* Allow for character prediction for partially typed words. This could be achieved via the neural net mentioned above.
+* Auto-correct for mistyped words.
+* Implement swiping techniques for mobile devices.
+* Your idea to make this app more awesome...
