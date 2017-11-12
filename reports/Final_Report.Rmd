@@ -13,13 +13,29 @@ output:
 Predicting words is a task that can help a user when writing text on a mobile phone.
 With small displays it can be cumbersome and lengthy to write texts.
 
+This project aims to overcome this hurdley by providing a prediction algorithm that can foresee the word most likely to be typed next based on the previous text.
+
 
 ## Development of the app
+The first step in creating the app was to preprocess the training data which consisted of several crawled texts from news websites, blogs and twitter messages.
+
+
+A profanity filter function was added to allow the user control over the suggestion of smear words.
+
+
 In the app we provide two models that are based on n-grams
 
 
 ## Used language models
+We employed two models to evaluate likelihood of the next word.
+The **stupid back-off** model which is very easy to implement delivers good results.
 
+In addition, we implemented the more advanced **modified Kneser-Ney approach** that also takes the surroundings of a word into account for computing the likelyhood.
+
+Both approaches can be used to compute a score for each n-gram which can then later be used to make the suggestions.
+
+To reduce the storage requirements of our model we omitted lots of ngrams that did not occur often in our training set.
+The usage of the `data.table` package enables super fast lookups of the suggestions: less than 5ms on a 6 year old desktop computer.
 
 
 ## Future extensions
