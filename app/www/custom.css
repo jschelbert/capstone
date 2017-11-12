@@ -3,6 +3,9 @@
   font-weight: bold;
   font-size: 24px;
 }
+a {
+    color: #00a65a;
+}
 a:link {
     color: #00a65a;
 }
@@ -14,4 +17,4 @@ a:hover {
 }
 a:active {
     color: #008749;
-} 
+}
