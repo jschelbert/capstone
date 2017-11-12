@@ -1,21 +1,49 @@
 # generate frequency tables:
-require(tidyr)
-require(dplyr)
-require(pryr)
-require(data.table)
-require(tidytext)
+library(tidyr)
+library(dplyr)
+library(pryr)
+library(data.table)
+library(tidytext)
 library(readr)
-require(quanteda)
+library(quanteda)
+library(readtext)
+library(stringi)
 
 
-compute_tidy_ngrams <- function(folder, use_6_ngrams=FALSE) {
-  textdata <- map_chr(c("en_US.blogs.txt", "en_US.news.txt", "en_US.twitter.txt"), function(x) read_file(paste0(folder, x))) %>% quanteda::corpus()
-  tok_sentences <- textdata %>% quanteda::tokenize(what = "sentence",
+preprocess_texts <- function(folder, convert_to_ascii = FALSE) {
+  textdata <- readtext::readtext(paste0(folder, "*.txt"))
+  
+  if (convert_to_ascii){
+    textdata <- textdata %>% 
+      stri_trans_general("latin-ascii") %>% 
+      char_tolower()
+  }
+  else {
+    textdata <- textdata %>% 
+      stri_c() %>% 
+      char_tolower()
+  }
+
+  #remove URLs
+  URLREGEX <- "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,4}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)"
+  textdata <- stri_replace_all_regex(textdata, URLREGEX, "")
+  
+  #remove symbols
+  textdata <- stri_replace_all_charclass(textdata, "[\\p{S}]", "")
+  
+  #remove numbers
+  textdata <- stri_replace_all_regex(textdata, "\\b\\d+\\b", "")
+}
+
+
+compute_tidy_ngrams <- function(folder, textdata, use_6_ngrams=FALSE) {
+  tok_sentences <- textdata %>% quanteda::corpus() %>% quanteda::tokenize(what = "sentence",
                                          remove_numbers = TRUE,
                                          remove_punct = TRUE,
                                          remove_symbols = TRUE,
                                          remove_separators = TRUE,
                                          remove_twitter = TRUE,
+                                         remove_url = TRUE,
                                          verbose = TRUE,
                                          simplify = TRUE)
   df_tok_sentences <- data_frame(text = tok_sentences)
@@ -121,7 +149,7 @@ compute_reduced_ngrams_threshold <- function(folder,
   ngrams_1 <- readRDS(paste0(folder, 1, "-grams_DT_sb_mkn.rds"))
   ngrams_1_nrow_before <- nrow(ngrams_1)
   ngrams_1_size_before <- as.numeric(object_size(ngrams_1))
-  ngrams_1 <- ngrams_1 %>% arrange(desc(sb_score)) %>% head(number_of_ngrams_1)
+  ngrams_1 <- ngrams_1 %>% arrange(desc(mkn)) %>% head(number_of_ngrams_1)
   ngrams_1_nrow_after <- nrow(ngrams_1)
   ngrams_1_size_after <- as.numeric(object_size(ngrams_1))
   setDT(ngrams_1)
