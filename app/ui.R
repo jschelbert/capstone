@@ -18,6 +18,7 @@ shinyUI(dashboardPage(skin = "green",
                         sidebarMenu(
                           #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
                           menuItem("Prediction", icon = icon("commenting"), tabName = "widgets", badgeLabel = "try me", badgeColor = "green"),
+                          menuItem("Random babble", icon = icon("comments-o"), tabName = "random"),
                           menuItem("Background", icon = icon("mortar-board"), startExpanded = TRUE, tabName = "background",
                                    menuSubItem("Preprocessing", icon = icon("wrench"), tabName = "preprocessing"),
                                    menuSubItem("Prediction algorithms", icon = icon("search"), tabName = "predictionalgos")),
@@ -29,7 +30,8 @@ shinyUI(dashboardPage(skin = "green",
                       ## Body content
                       dashboardBody(
                         tags$head(
-                          tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+                          tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+                          tags$script(src = "functions.js")
                         ),
                         tabItems(
                           #------------------------------------------------------------------------
@@ -43,7 +45,20 @@ shinyUI(dashboardPage(skin = "green",
                                   p('The following table features the predicted words along with their score/probability. Both stupid-back-off (sb_score) and modfied Kneser-Ney (mkn) values are reported.'),
                                   tableOutput("predictionvalue_sb")
                           ),
-                          
+                          #------------------------------------------------------------------------
+                          tabItem(tabName = "random",
+                                  h2("Random babble based on the language model"),
+                                  p("Since the prediction algorithm outputs several words along with their estimated probability, we can utilize this to obtain some randomly generated text based on some initial words. You can try this by typing some words and the algorith will extend the text. Please note that our language model does not include punctuation marks, thus, we get onnly one long sentence."),
+                                  p("You can change the language in the", a("Prediction", onclick = "openTab('widgets')"), "tab. Note that longer random babbles might take some time to compute."),
+                                  br(),
+                                  #radioButtons("language", "First, select a language", c("English", "German")),
+                                  sliderInput("numwordsbabble", "Select the length  of the random babble:", 
+                                              min = 100, max = 1000, value = 250, step = 50, 
+                                              ticks = FALSE),
+                                  textInput("randomseed", label = "Then enter some text to start the random babble:", 
+                                            placeholder = "Your text here..."),
+                                  textOutput("random_babble")
+                          ),                          
                           #------------------------------------------------------------------------
                           tabItem("preprocessing", {
                             h2("Background - Preprocessing")

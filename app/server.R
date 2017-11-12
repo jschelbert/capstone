@@ -1,9 +1,9 @@
 #
-# This is the server logic of a Shiny web application. You can run the 
+# This is the server logic of a Shiny web application. You can run the
 # application by clicking 'Run App' above.
 #
 # Find out more about building applications with Shiny here:
-# 
+#
 #    http://shiny.rstudio.com/
 #
 
@@ -23,10 +23,10 @@ folder_de <- "../data/final/de_DE/"
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   observeEvent(input$language, {
-    if (input$language == "English"){
+    if (input$language == "English") {
       folder <- folder_en
     }
-    else if (input$language == "German"){
+    else if (input$language == "German") {
       folder <- folder_de
     }
     ngrams_5 <<- readRDS(paste0(folder, "5-grams_DT_sb_mkn_threshold_reduced.rds"))
@@ -73,11 +73,29 @@ shinyServer(function(input, output) {
     
   })
   
-  output$predictionvalue_sb <- renderTable({ 
+  output$predictionvalue_sb <- renderTable({
     predict_sb_mkn_DT(input$usertext)
   },
   digits = 5,
   hover = TRUE,
-  spacing = "s"
-  )
+  spacing = "s")
+  
+  output$random_babble <- renderText({
+    babble <- vector(mode = "character", length = input$numwordsbabble)
+    randomseed <- input$randomseed
+    if (is.na(input$randomseed) | is.null(input$randomseed)) {
+      randomseed <- sample(ngrams_1[, ngram], 
+                           size = 1, 
+                           prob = ngrams_1[, mkn])
+    }
+    babble[1] <- randomseed
+    for (i in 2:input$numwordsbabble) {
+        next_word_table <- predict_sb_mkn_DT(paste(babble[1:i], collapse = " "))
+        babble[i] <- sample(next_word_table[, word], 
+                            size = 1, 
+                            prob = next_word_table[, mkn])
+    }
+    paste(babble, collapse = " ")
+  })
+  
 })
