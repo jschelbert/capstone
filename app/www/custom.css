@@ -3,3 +3,15 @@
   font-weight: bold;
   font-size: 24px;
 }
+a:link {
+    color: #00a65a;
+}
+a:visited {
+    color: #008749;
+}
+a:hover {
+    color: #008749;
+}
+a:active {
+    color: #008749;
+} 
