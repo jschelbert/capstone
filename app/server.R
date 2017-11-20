@@ -10,6 +10,7 @@
 library(data.table)
 library(dplyr)
 library(shiny)
+library(markdown)
 
 ## source prediction function
 source("../src/predict_stupid_backoff.R")
@@ -34,68 +35,70 @@ shinyServer(function(input, output) {
     ngrams_3 <<- readRDS(paste0(folder, "3-grams_DT_sb_mkn_threshold_reduced.rds"))
     ngrams_2 <<- readRDS(paste0(folder, "2-grams_DT_sb_mkn_threshold_reduced.rds"))
     ngrams_1 <<- readRDS(paste0(folder, "1-grams_DT_sb_mkn_threshold_reduced.rds"))
-    
+
     setDT(ngrams_5)
     setDT(ngrams_4)
     setDT(ngrams_3)
     setDT(ngrams_2)
     setDT(ngrams_1)
-    
+
     setkey(ngrams_5, ngram)
     setkey(ngrams_4, ngram)
     setkey(ngrams_3, ngram)
     setkey(ngrams_2, ngram)
     setkey(ngrams_1, ngram)
-    
+
     setorder(ngrams_5, ngram, -mkn)
     setorder(ngrams_4, ngram, -mkn)
     setorder(ngrams_3, ngram, -mkn)
     setorder(ngrams_2, ngram, -mkn)
     setorder(ngrams_1, -mkn)
-    
+
     setkey(ngrams_5, ngram)
     setkey(ngrams_4, ngram)
     setkey(ngrams_3, ngram)
     setkey(ngrams_2, ngram)
     setkey(ngrams_1, ngram)
-    
+
     setorder(ngrams_5, ngram, -mkn)
     setorder(ngrams_4, ngram, -mkn)
     setorder(ngrams_3, ngram, -mkn)
     setorder(ngrams_2, ngram, -mkn)
     setorder(ngrams_1, -mkn)
-    
+
     # setorder(ngrams_5, ngram, -sb_score)
     # setorder(ngrams_4, ngram, -sb_score)
     # setorder(ngrams_3, ngram, -sb_score)
     # setorder(ngrams_2, ngram, -sb_score)
     # setorder(ngrams_1, -sb_score)
-    
+
   })
-  
+
   output$predictionvalue_sb <- renderTable({
     predict_sb_mkn_DT(input$usertext)
   },
   digits = 5,
   hover = TRUE,
-  spacing = "s")
-  
+  align = 'lcc',
+  spacing = "m",
+  width = "40%")
+
   output$random_babble <- renderText({
     babble <- vector(mode = "character", length = input$numwordsbabble)
     randomseed <- input$randomseed
     if (is.na(input$randomseed) | is.null(input$randomseed)) {
-      randomseed <- sample(ngrams_1[, ngram], 
-                           size = 1, 
+      randomseed <- sample(ngrams_1[, ngram],
+                           size = 1,
                            prob = ngrams_1[, mkn])
     }
     babble[1] <- randomseed
     for (i in 2:input$numwordsbabble) {
         next_word_table <- predict_sb_mkn_DT(paste(babble[1:i], collapse = " "))
-        babble[i] <- sample(next_word_table[, word], 
-                            size = 1, 
+        babble[i] <- sample(next_word_table[, word],
+                            size = 1,
                             prob = next_word_table[, mkn])
     }
     paste(babble, collapse = " ")
   })
-  
+
 })
