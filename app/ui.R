@@ -48,7 +48,7 @@ shinyUI(dashboardPage(skin = "green",
                               #------------------------------------------------------------------------
                               tabItem(tabName = "random",
                                       h2("Random babble based on the language model"),
-                                      p("Since the prediction algorithm outputs several words along with their estimated probability, we can utilize this to obtain some randomly generated text based on some initial words. You can try this by typing some words and the algorith will extend the text. Please note that our language model does not include punctuation marks, thus, we get onnly one long sentence."),
+                                      p("Since the prediction algorithm outputs several words along with their estimated probability, we can utilize this to obtain some randomly generated text based on some initial words. You can try this by typing some words and the algorith will extend the text. Please note that our language model does not include punctuation marks, thus, we get only one long sentence."),
                                       p("You can change the language in the", a("Prediction", onclick = "openTab('widgets')"), "tab."),
                                       p("Note that longer random babbles might take some time to compute."),
                                       br(),

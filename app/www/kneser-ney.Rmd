@@ -12,7 +12,7 @@ bibliography: publications.bib
 ## Introduction {-}
 This document makes heavy use of the paper by @Chen1996 and @Brants:2007aa.
 
-The goal of the prediction algorithms described below is calculate the probability of a word $w_i$ given some previous words $w_{i-3}, w_{i-2}, w_{i-1}$ (here three words).
+The goal of the prediction algorithms described below is calculate the probability of a word $w_i$ given some previous words $w_{i-3}, w_{i-2}, w_{i-1}$ (like for example three words).
 This probability can be written as $p(w_i|w_{i-3} w_{i-2} w_{i-1})$.
 
 The following explanations use some common defintions:  
@@ -22,10 +22,41 @@ The count of $w_{k}^{l}$ is defined as $c(w_{k}^{l})$ being the number of occure
 
 
 ## Stupid Back-Off Predictions {-}
+Traditional algorithms try to compute a proper probability of an n-gram -- like for example the Kneser-Ney approach outlined below -- which takes the form
+
+\begin{equation}
+p(w_i|w_{i-n+1}^{i-1}) = 
+\begin{cases}
+\hat{p}(w_{i-n+1}^{i}) &\text{ if }w_{i-n+1}^{i}\text{ is found,} \\
+\lambda(w_{i-n+1}^{i-1})p(w_{i-n+2}^{i}) & \text{ otherwise}
+\end{cases}
+\end{equation}
+
+with some precomputed probability $\hat{p}(\cdot)$ and back-off weights $\lambda(\cdot)$.
+
+The stupid back-off approach weakens the probability assumption but in return introduces a much simpler computational algorithm.
+Here, the counts of the n-grams are used to calculate a score
+
+\begin{equation}
+s(w_i|w_{i-n+1}^{i-1}) = 
+\begin{cases}
+\frac{c(w_{i-n+1}^{i})}{c(w_{i-n+1}^{i-1})} &\text{ if }c(w_{i-n+1}^{i})>0 \\
+\alpha s(w_i|w_{i-n+2}^{i-1}) & \text{ otherwise}
+\end{cases}
+\end{equation}
+
+To compute the score for single words, i.e. unigrams, the score is defined as
+
+\begin{equation}
+s(w_i) = \frac{c(w_i)}{N}
+\end{equation}
+
+where $N$ is the size of the training set, meaning the number of words in the training set.
+The authors propose a fixed back-off factor of $\alpha=0.4$.
 
 
 ## Absolute Discounting {-}
-For every higher-order a fixed discount $0\leq D\leq 1$ is subtracted from each non-zero count.
+For every higher-order n-gram a fixed discount $0\leq D\leq 1$ is subtracted from each non-zero count.
 
 \begin{equation}
 p_{abs}(w_i|w_{i-n+1}^{i-1}) = \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + (1-\lambda_{w_{i-n+1}^{i-1}})p_{abs}(w_i|w_{i-n+2}^{i-1}) (\#eq:e9)

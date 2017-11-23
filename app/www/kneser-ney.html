@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>kneser-ney.utf8</title>
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+
+
+
+<section id="introduction" class="level2 unnumbered">
+<h2>Introduction</h2>
+<p>This document makes heavy use of the paper by <span class="citation" data-cites="Chen1996">Chen and Goodman (1996)</span> and <span class="citation" data-cites="Brants:2007aa">Brants et al. (2007)</span>.</p>
+<p>The goal of the prediction algorithms described below is calculate the probability of a word <span class="math inline">\(w_i\)</span> given some previous words <span class="math inline">\(w_{i-3}, w_{i-2}, w_{i-1}\)</span> (like for example three words). This probability can be written as <span class="math inline">\(p(w_i|w_{i-3} w_{i-2} w_{i-1})\)</span>.</p>
+<p>The following explanations use some common defintions:<br />
+<span class="math inline">\(w_{k}^{l}\)</span> is defined as the sequence of words <span class="math inline">\(w_k \cdots w_l\)</span>. The count of <span class="math inline">\(w_{k}^{l}\)</span> is defined as <span class="math inline">\(c(w_{k}^{l})\)</span> being the number of occurences of <span class="math inline">\(w_{k}^{l}\)</span> in the training set.</p>
+</section>
+<section id="stupid-back-off-predictions" class="level2 unnumbered">
+<h2>Stupid Back-Off Predictions</h2>
+<p>Traditional algorithms try to compute a proper probability of an n-gram – like for example the Kneser-Ney approach outlined below – which takes the form</p>
+<span class="math display">\[\begin{equation}
+p(w_i|w_{i-n+1}^{i-1}) = 
+\begin{cases}
+\hat{p}(w_{i-n+1}^{i}) &amp;\text{ if }w_{i-n+1}^{i}\text{ is found,} \\
+\lambda(w_{i-n+1}^{i-1})p(w_{i-n+2}^{i}) &amp; \text{ otherwise}
+\end{cases}
+\end{equation}\]</span>
+<p>with some precomputed probability <span class="math inline">\(\hat{p}(\cdot)\)</span> and back-off weights <span class="math inline">\(\lambda(\cdot)\)</span>.</p>
+<p>The stupid back-off approach weakens the probability assumption but in return introduces a much simpler computational algorithm. Here, the counts of the n-grams are used to calculate a score</p>
+<span class="math display">\[\begin{equation}
+s(w_i|w_{i-n+1}^{i-1}) = 
+\begin{cases}
+\frac{c(w_{i-n+1}^{i})}{c(w_{i-n+1}^{i-1})} &amp;\text{ if }c(w_{i-n+1}^{i})&gt;0 \\
+\alpha s(w_i|w_{i-n+2}^{i-1}) &amp; \text{ otherwise}
+\end{cases}
+\end{equation}\]</span>
+<p>To compute the score for single words, i.e. unigrams, the score is defined as</p>
+<span class="math display">\[\begin{equation}
+s(w_i) = \frac{c(w_i)}{N}
+\end{equation}\]</span>
+<p>where <span class="math inline">\(N\)</span> is the size of the training set, meaning the number of words in the training set. The authors propose a fixed back-off factor of <span class="math inline">\(\alpha=0.4\)</span>.</p>
+</section>
+<section id="absolute-discounting" class="level2 unnumbered">
+<h2>Absolute Discounting</h2>
+<p>For every higher-order n-gram a fixed discount <span class="math inline">\(0\leq D\leq 1\)</span> is subtracted from each non-zero count.</p>
+<span class="math display" id="eq:e9">\[\begin{equation}
+p_{abs}(w_i|w_{i-n+1}^{i-1}) = \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + (1-\lambda_{w_{i-n+1}^{i-1}})p_{abs}(w_i|w_{i-n+2}^{i-1}) \tag{1}
+\end{equation}\]</span>
+<p>To make this sum to one,</p>
+<span class="math display" id="eq:e10">\[\begin{equation}
+1-\lambda_{w_{i-n+1}^{i-1}} = \frac{D}{\sum_{w_i}c(w_{i-n+1}^{i})} N_{1+}(w_{i-n+1}^{i-1}\bullet) \tag{2}
+\end{equation}\]</span>
+<p>must hold with</p>
+<span class="math display" id="eq:e6">\[\begin{equation}
+N_{1+}(w_{i-n+1}^{i-1}\bullet) = \lvert\{w_i: c(w_{i-n+1}^{i-1}w_i)&gt; 0 \}\rvert \tag{3}
+\end{equation}\]</span>
+<p>being the number of unique words that follow the history <span class="math inline">\(w_{i-n+1}^{i-1}\)</span>. As a suggestions for <span class="math inline">\(D\)</span> <span class="citation" data-cites="Neyetal1994">Ney, Essen, and Kneser (1994)</span> propose</p>
+<span class="math display">\[\begin{equation}
+D=\frac{n_1}{n_1+2n_2}
+\end{equation}\]</span>
+<p>where <span class="math inline">\(n_1\)</span> and <span class="math inline">\(n_2\)</span> are the total number of n-grams with exactly one or two counts.</p>
+</section>
+<section id="kneser-ney-smoothing" class="level2 unnumbered">
+<h2>Kneser-Ney Smoothing</h2>
+<p>Analog to <a href="#eq:e9">(1)</a> we have with <span class="math inline">\(0\leq D\leq 1\)</span></p>
+<span class="math display" id="eq:e13">\[\begin{align}
+p_{KN}(w_i|w_{i-n+1}^{i-1}) =&amp; \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + \notag\\ &amp;\frac{D}{\sum_{w_i}c(w_{i-n+1}^{i})}N_{1+}(w_{i-n+1}^{i-1}\bullet)p_{KN}(w_i|w_{i-n+2}^{i-1}) \tag{4}
+\end{align}\]</span>
+<p>We want that for bigrams the following equation holds:</p>
+<span class="math display" id="eq:e12">\[\begin{equation}
+\sum_{w_{i-1}}p_{KN}(w_{i-1}w_i) = \frac{c(w_i)}{\sum_{w_i}c(w_i)} \tag{5}
+\end{equation}\]</span>
+<p>The right-hand side of the equation is the frequency of <span class="math inline">\(w_i\)</span> in the training data, whereas the left-hand side id the unigram marginal for <span class="math inline">\(w_i\)</span> of the smoothed bigram distribution <span class="math inline">\(p_{KN}\)</span>.</p>
+<p>To find such a unigram distribution <span class="math inline">\(p_{KN}(w_i)\)</span> such that <a href="#eq:e12">(5)</a> is fulfilled we expand <a href="#eq:e12">(5)</a> to</p>
+<span class="math display">\[\begin{equation}
+\frac{c(w_i)}{\sum_{w_i}c(w_i)} = \sum_{w_{i-1}}p_{KN}(w_i|w_{i-1})p(w_{i-1}).
+\end{equation}\]</span>
+<p>For <span class="math inline">\(p(w_{i-1})\)</span> the distribution found in the training data is used, which leads to</p>
+<span class="math display">\[\begin{equation}
+p(w_{i-1}) = \frac{c(w_{i-1})}{\sum_{w_{i-1}}c(w_{i-1})}.
+\end{equation}\]</span>
+<p>This can be substituted to</p>
+<span class="math display">\[\begin{equation}
+c(w_i) = \sum_{w_{i-1}}c(w_{i-1})p_{KN}(w_i|w_{i-1})
+\end{equation}\]</span>
+<p>which can again be substituted in <a href="#eq:e13">(4)</a> to obtain</p>
+<span class="math display">\[\begin{align}
+c(w_i) =&amp; \sum_{w_{i-1}}c(w_{i-1})\left[ \frac{\max\{c(w_{i-1}w_i)-D,0\}}{\sum_{w_i}c(w_{i-1}w_i)} + \frac{D}{\sum_{w_i}c(w_{i-1}w_i)} N_{1+}(w_{i-1}\bullet)p_{KN}(w_i) \right] \\
+=&amp; \sum{w_{i-1}:c(w_{i-1}w_i)&gt;0}c(w_{i-1})\frac{c(w_{i-1}w_i)-D}{c(w_{i-1})} \nonumber \\
+&amp; + \sum_{w_{i-1}}c(w_{i-1})\frac{D}{c(w_{i-1})}N_{1+}(w_{i-1}\bullet)p_{KN}(w_i) \\
+=&amp; c(w_i) - N_{1+}(\bullet w_i) D + D p_{KN}(w_i)\sum_{w_{i-1}} N_{1+}(w_{i-1}\bullet) \\
+=&amp; c(w_i) - N_{1+}(\bullet w_i) D + D p_{KN}(w_i) N_{1+}(\bullet\bullet)
+\end{align}\]</span>
+<p>where</p>
+<span class="math display">\[\begin{equation}
+N_{1+}(\bullet w_i) = \lvert \{w_{i-1}: c(w_{i-1} w_i) &gt;0\} \rvert
+\end{equation}\]</span>
+<p>is the number of different words <span class="math inline">\(w_{i-1}\)</span> that precede <span class="math inline">\(w_i\)</span> in the training data and where</p>
+<span class="math display">\[\begin{equation}
+N_{+1}(\bullet\bullet) = \sum_{w_{i-1}}N_{1+}(w_{i-1}\bullet) = \lvert \{(w_{i-1}, w_i): c(w_{i-1} w_i) &gt;0\} \rvert = \sum_{w_i}N_{1+}(\bullet w_i)
+\end{equation}\]</span>
+<p>Thus, if we solve for <span class="math inline">\(p_{KN}(w_i)\)</span>, we obtain</p>
+<span class="math display">\[\begin{equation}
+p_{KN}(w_i) = \frac{N_{1+}(\bullet w_i)}{N_{1+}(\bullet\bullet)}.
+\end{equation}\]</span>
+<p>For higher-order models the general definition is given by</p>
+<span class="math display">\[\begin{equation}
+p_{KN}(w_i|w_{i-n+2}^{i-1}) = \frac{N_{1+}(\bullet w_{i-n+2}^i)}{N{1+}(\bullet w_{i-n+2}^{i-1} \bullet)}
+\end{equation}\]</span>
+<p>where</p>
+<span class="math display">\[\begin{align}
+N_{1+}(\bullet w_{i-n+2}^{i}) &amp;= \lvert \{w_{i-n+1}: c(w_{i-n+1}^i)&gt;0\} \rvert \\
+N_{1+}(\bullet w_{i-n+2}^{i-1} \bullet) &amp;= \lvert \{(w_{i-n+1}, w_i): c(w_{i-n+1}^i)&gt;0\} \rvert = \sum_{w_i}N_{1+}(\bullet w_{i-n+2}^i).
+\end{align}\]</span>
+</section>
+<section id="modified-kneser-ney-smoothing" class="level2 unnumbered">
+<h2>Modified Kneser-Ney Smoothing</h2>
+<p>An improved version of the above method can be achieved by using not one discount <span class="math inline">\(D\)</span>, but different depending on the actual count. We define <span class="math inline">\(D(c)\)</span> as follows</p>
+<span class="math display">\[\begin{align}
+D(c) &amp;=\begin{cases}
+0 &amp; \text{if } c=0 \\
+D_1 &amp; \text{if } c=1 \\
+D_2 &amp; \text{if } c=2 \\
+D_{3+} &amp; \text{if } c\geq 3
+\end{cases}
+\end{align}\]</span>
+<p>With this we use an adjusted version of <a href="#eq:e13">(4)</a>, more precisely</p>
+<span class="math display">\[\begin{equation}
+p_{KN}(w_i|w_{i-n+1}^{i-1}) = \frac{\max\{c(w_{i-n+1}^{i}) - D(c(w_{i-n+1}^i)),0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + \gamma(w_{i-n+1}^{i-1}) p_{KN}(w_i|w_{i-n+2}^{i-1})
+\end{equation}\]</span>
+<p>with</p>
+<span class="math display">\[\begin{equation}
+\gamma(w_{i-n+1}^{i-1}) = \frac{D_1 N_{1}(w_{i-n+1}^{i-1} \bullet) + D_2 N_{2}(w_{i-n+1}^{i-1} \bullet) + D_{3+} N_{3+}(w_{i-n+1}^{i-1} \bullet)}{\sum{w_i}c(w_{i-n+1}^{i})}
+\end{equation}\]</span>
+<p>An estimate for the optimal values of the discounts can be given by</p>
+<span class="math display">\[\begin{align}
+D_1 &amp;= 1 - 2Y\frac{n_2}{n_1} \\
+D_2 &amp;= 2 - 3Y\frac{n_3}{n_2} \\
+D_{3+} &amp;= 3 - 4Y\frac{n_4}{n_3} \\
+\text{with } Y &amp;= \frac{n_1}{n_1 + 2n_2}
+\end{align}\]</span>
+<p>Note that <span class="math inline">\(n_1\ldots n_4\)</span> is defined for each <span class="math inline">\(n\)</span>-gram and, thus, also the <span class="math inline">\(D_1\)</span>, <span class="math inline">\(D_2\)</span> and <span class="math inline">\(D_{3+}\)</span> need to be understood as a discount for each <span class="math inline">\(n\)</span> (=<span class="math inline">\(n\)</span>-gram “level”).</p>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2>References</h2>
+<div id="refs" class="references">
+<div id="ref-Brants:2007aa">
+<p>Brants, Thorsten, Thorsten Brants, Ashok C. Popat, Peng Xu, Franz J. Och, and Jeffrey&quot; Dean. 2007. “Large Language Models in Machine Translation.” <em>IN PROCEEDINGS OF THE JOINT CONFERENCE ON EMPIRICAL METHODS IN NATURAL LANGUAGE PROCESSING AND COMPUTATIONAL NATURAL LANGUAGE LEARNING</em>, 858–67. doi:<a href="https://doi.org/10.1.1.324.3653">10.1.1.324.3653</a>.</p>
+</div>
+<div id="ref-Chen1996">
+<p>Chen, Stanley F., and Joshua Goodman. 1996. “An Empirical Study of Smoothing Techniques for Language Modeling.” In <em>Proceedings of the 34th Annual Meeting on Association for Computational Linguistics</em>, 310–18. ACL ’96. Stroudsburg, PA, USA: Association for Computational Linguistics. doi:<a href="https://doi.org/10.3115/981863.981904">10.3115/981863.981904</a>.</p>
+</div>
+<div id="ref-Neyetal1994">
+<p>Ney, Hermann, Ute Essen, and Reinhard Kneser. 1994. “On Structuring Probabilistic Dependences in Stochastic Language Modelling” 8 (1): 1–38. doi:<a href="https://doi.org/10.1006/csla.1994.1001">10.1006/csla.1994.1001</a>.</p>
+</div>
+</div>
+</section>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
