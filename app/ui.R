@@ -63,7 +63,7 @@ shinyUI(dashboardPage(skin = "green",
                               #------------------------------------------------------------------------
                               tabItem("preprocessing",
                                       h1("Background - Preprocessing"),
-                                      includeMarkdown("www/kneser-ney.md")
+                                      includeHTML("www/preprocessing.html")
                               ),
                               tabItem("predictionalgos",
                                       h1("Background - Prediction algorithms"),

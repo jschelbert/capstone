@@ -1,60 +1,96 @@
 ---
 output:
-  html_document:
+  bookdown::html_document2:
     highlight: zenburn
     keep_md: yes
     theme: null
-    toc: yes
+    toc: no
+    self_contained: yes
 bibliography: publications.bib
 ---
 
-This report makes heavy use of the paper by @Chen1996 [@Chen1996]
+## Introduction {-}
+This document makes heavy use of the paper by @Chen1996 and @Brants:2007aa.
 
-## Absolute Discounting
+The goal of the prediction algorithms described below is calculate the probability of a word $w_i$ given some previous words $w_{i-3}, w_{i-2}, w_{i-1}$ (here three words).
+This probability can be written as $p(w_i|w_{i-3} w_{i-2} w_{i-1})$.
+
+The following explanations use some common defintions:  
+$w_{k}^{l}$ is defined as the sequence of words $w_k \cdots w_l$.
+The count of $w_{k}^{l}$ is defined as $c(w_{k}^{l})$ being the number of occurences of $w_{k}^{l}$ in the training set.
+
+
+
+## Stupid Back-Off Predictions {-}
+
+
+## Absolute Discounting {-}
 For every higher-order a fixed discount $0\leq D\leq 1$ is subtracted from each non-zero count.
-\[
-p_{abs}(w_i|w_{i-n+1}^{i-1}) = \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + (1-\lambda_{w_{i-n+1}^{i-1}})p_{abs}(w_i|w_{i-n+2}^{i-1})
-\]
+
+\begin{equation}
+p_{abs}(w_i|w_{i-n+1}^{i-1}) = \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + (1-\lambda_{w_{i-n+1}^{i-1}})p_{abs}(w_i|w_{i-n+2}^{i-1}) (\#eq:e9)
+\end{equation}
+
 To make this sum to one,
-\[
-1-\lambda_{w_{i-n+1}^{i-1}} = \frac{D}{\sum_{w_i}c(w_{i-n+1}^{i})} N_{1+}(w_{i-n+1}^{i-1}\bullet)
-\]
+
+\begin{equation}
+1-\lambda_{w_{i-n+1}^{i-1}} = \frac{D}{\sum_{w_i}c(w_{i-n+1}^{i})} N_{1+}(w_{i-n+1}^{i-1}\bullet) (\#eq:e10)
+\end{equation}
+
 must hold with
-\[
-N_{1+}(w_{i-n+1}^{i-1}\bullet) = \lvert\{w_i: c(w_{i-n+1}^{i-1}w_i)> 0 \}\rvert
-\]
+
+\begin{equation}
+N_{1+}(w_{i-n+1}^{i-1}\bullet) = \lvert\{w_i: c(w_{i-n+1}^{i-1}w_i)> 0 \}\rvert (\#eq:e6)
+\end{equation}
+
 being the number of unique words that follow the history $w_{i-n+1}^{i-1}$.
-As a suggestions for $D$ [@Neyetat1994] have
-\[
+As a suggestions for $D$ @Neyetal1994 propose
+
+\begin{equation}
 D=\frac{n_1}{n_1+2n_2}
-\]
+\end{equation}
+
 where $n_1$ and $n_2$ are the total number of n-grams with exactly one or two counts.
 
-## Kneser-Ney Smoothing
-Analog to \eqref{eq:9} we have with $0\leq D\leq 1$
+
+
+
+
+## Kneser-Ney Smoothing {-}
+Analog to \@ref(eq:e9) we have with $0\leq D\leq 1$
+
 \begin{align}
-p_{KN}(w_i|w_{i-n+1}^{i-1}) =& \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + \nonumber \\ &\frac{D}{\sum_{w_i}c(w_{i-n+1}^{i})}N_{1+}(w_{i-n+1}^{i-1}\bullet)p_{KN}(w_i|w_{i-n+2}^{i-1}) \label{eq:13}
+p_{KN}(w_i|w_{i-n+1}^{i-1}) =& \frac{\max\{c(w_{i-n+1}^{i})-D,0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + \notag\\ &\frac{D}{\sum_{w_i}c(w_{i-n+1}^{i})}N_{1+}(w_{i-n+1}^{i-1}\bullet)p_{KN}(w_i|w_{i-n+2}^{i-1}) (\#eq:e13)
 \end{align}
 
 We want that for bigrams the following equation holds:
-\[
-\sum_{w_{i-1}}p_{KN}(w_{i-1}w_i) = \frac{c(w_i)}{\sum_{w_i}c(w_i)}
-\]
+
+\begin{equation}
+\sum_{w_{i-1}}p_{KN}(w_{i-1}w_i) = \frac{c(w_i)}{\sum_{w_i}c(w_i)} (\#eq:e12)
+\end{equation}
+
 The right-hand side of the equation is the frequency of $w_i$ in the training data, whereas the left-hand side id the unigram marginal for $w_i$ of the smoothed bigram distribution $p_{KN}$.
 
-To find such a unigram distribution $p_{KN}(w_i)$ such that \eqref{eq:12} is fulfilled we expand \autoref{eq:12} to
-\[
+To find such a unigram distribution $p_{KN}(w_i)$ such that \@ref(eq:e12) is fulfilled we expand \@ref(eq:e12) to
+
+\begin{equation}
 \frac{c(w_i)}{\sum_{w_i}c(w_i)} = \sum_{w_{i-1}}p_{KN}(w_i|w_{i-1})p(w_{i-1}).
-\]
+\end{equation}
+
 For $p(w_{i-1})$ the distribution found in the training data is used, which leads to
-\[
+
+\begin{equation}
 p(w_{i-1}) = \frac{c(w_{i-1})}{\sum_{w_{i-1}}c(w_{i-1})}.
-\]
+\end{equation}
+
 This can be substituted to
-\[
+
+\begin{equation}
 c(w_i) = \sum_{w_{i-1}}c(w_{i-1})p_{KN}(w_i|w_{i-1})
-\]
-which can again be substituted in \eqref{eq:13} to obtain
+\end{equation}
+
+which can again be substituted in \@ref(eq:e13) to obtain
+
 \begin{align}
 c(w_i) =& \sum_{w_{i-1}}c(w_{i-1})\left[ \frac{\max\{c(w_{i-1}w_i)-D,0\}}{\sum_{w_i}c(w_{i-1}w_i)} + \frac{D}{\sum_{w_i}c(w_{i-1}w_i)} N_{1+}(w_{i-1}\bullet)p_{KN}(w_i) \right] \\
 =& \sum{w_{i-1}:c(w_{i-1}w_i)>0}c(w_{i-1})\frac{c(w_{i-1}w_i)-D}{c(w_{i-1})} \nonumber \\
@@ -62,32 +98,47 @@ c(w_i) =& \sum_{w_{i-1}}c(w_{i-1})\left[ \frac{\max\{c(w_{i-1}w_i)-D,0\}}{\sum_{
 =& c(w_i) - N_{1+}(\bullet w_i) D + D p_{KN}(w_i)\sum_{w_{i-1}} N_{1+}(w_{i-1}\bullet) \\
 =& c(w_i) - N_{1+}(\bullet w_i) D + D p_{KN}(w_i) N_{1+}(\bullet\bullet)
 \end{align}
+
 where
-\[
+
+\begin{equation}
 N_{1+}(\bullet w_i) = \lvert \{w_{i-1}: c(w_{i-1} w_i) >0\} \rvert
-\]
+\end{equation}
+
 is the number of different words $w_{i-1}$ that precede $w_i$ in the training data and where
-\[
+
+\begin{equation}
 N_{+1}(\bullet\bullet) = \sum_{w_{i-1}}N_{1+}(w_{i-1}\bullet) = \lvert \{(w_{i-1}, w_i): c(w_{i-1} w_i) >0\} \rvert = \sum_{w_i}N_{1+}(\bullet w_i)
-\]
+\end{equation}
+
 Thus, if we solve for $p_{KN}(w_i)$, we obtain
-\[
+
+\begin{equation}
 p_{KN}(w_i) = \frac{N_{1+}(\bullet w_i)}{N_{1+}(\bullet\bullet)}.
-\]
+\end{equation}
 
 For higher-order models the general definition is given by
-\[
+
+\begin{equation}
 p_{KN}(w_i|w_{i-n+2}^{i-1}) = \frac{N_{1+}(\bullet w_{i-n+2}^i)}{N{1+}(\bullet w_{i-n+2}^{i-1} \bullet)}
-\]
+\end{equation}
+
 where
+
 \begin{align}
 N_{1+}(\bullet w_{i-n+2}^{i}) &= \lvert \{w_{i-n+1}: c(w_{i-n+1}^i)>0\} \rvert \\
 N_{1+}(\bullet w_{i-n+2}^{i-1} \bullet) &= \lvert \{(w_{i-n+1}, w_i): c(w_{i-n+1}^i)>0\} \rvert = \sum_{w_i}N_{1+}(\bullet w_{i-n+2}^i).
 \end{align}
 
-## Modified Kneser-Ney Smoothing
+
+
+
+
+## Modified Kneser-Ney Smoothing {-}
+
 An improved version of the above method can be achieved by using not one discount $D$, but different depending on the actual count.
 We define $D(c)$ as follows
+
 \begin{align}
 D(c) &=\begin{cases}
 0 & \text{if } c=0 \\
@@ -96,16 +147,21 @@ D_2 & \text{if } c=2 \\
 D_{3+} & \text{if } c\geq 3
 \end{cases}
 \end{align}
-With this we use an adjusted version of \eqref{eq:13}, more precisely
-\[
+
+With this we use an adjusted version of \@ref(eq:e13), more precisely
+
+\begin{equation}
 p_{KN}(w_i|w_{i-n+1}^{i-1}) = \frac{\max\{c(w_{i-n+1}^{i}) - D(c(w_{i-n+1}^i)),0\}}{\sum_{w_i}c(w_{i-n+1}^{i})} + \gamma(w_{i-n+1}^{i-1}) p_{KN}(w_i|w_{i-n+2}^{i-1})
-\]
+\end{equation}
+
 with
-\[
+
+\begin{equation}
 \gamma(w_{i-n+1}^{i-1}) = \frac{D_1 N_{1}(w_{i-n+1}^{i-1} \bullet) + D_2 N_{2}(w_{i-n+1}^{i-1} \bullet) + D_{3+} N_{3+}(w_{i-n+1}^{i-1} \bullet)}{\sum{w_i}c(w_{i-n+1}^{i})}
-\]
+\end{equation}
 
 An estimate for the optimal values of the discounts can be given by
+
 \begin{align}
 D_1 &= 1 - 2Y\frac{n_2}{n_1} \\
 D_2 &= 2 - 3Y\frac{n_3}{n_2} \\
