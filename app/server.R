@@ -13,13 +13,13 @@ library(shiny)
 library(markdown)
 
 ## source prediction function
-source("../src/predict_stupid_backoff.R")
+source("predict_stupid_backoff.R")
 
 ## load the n-gram data
-folder <- "../data/final/en_US/"
+folder <- "data/en_US/"
 
-folder_en <- "../data/final/en_US/"
-folder_de <- "../data/final/de_DE/"
+folder_en <- "data/en_US/"
+folder_de <- "data/de_DE/"
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
