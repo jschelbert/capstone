@@ -1,0 +1,34 @@
+.reveal .controls .navigate-up {
+    display:none
+}
+
+.reveal .controls .navigate-down {
+    display:none
+}
+
+.reveal .controls .navigate-right {
+    bottom: 0;
+}
+
+.reveal .controls .navigate-left {
+    bottom: 0;
+}
+
+.reveal .controls {
+    height: 75px;
+}
+
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+    text-transform: none;
+}
+
+.reveal .slides p, .reveal .slides ul {
+    text-align: left;
+    font-size: 80%;
+}
+
+.reveal .img_left {
+    float: left;
+    margin: 0px 20px;
+}
