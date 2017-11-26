@@ -182,6 +182,7 @@ This allowed the reduction to only 25MB of memory.
 If one would want to implent this for a mobile device, there would very likely be more room for improvements...
 
 The following graph shows the influence of the threshold on the accuracy scores calculated by the benchmark from [Hernán Foffani](https://github.com/hfoffani/dsci-benchmark).
+
 ```{r, echo=FALSE, cache=TRUE}
 library(tidyr)
 benchmarks <- readRDS("../../data/final/en_US/benchmark_results.rds")

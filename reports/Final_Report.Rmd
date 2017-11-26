@@ -25,7 +25,7 @@ You can try out the app [here](https://jschelbert.shinyapps.io/PredWordR/).
 
 ## Development of the app
 The first step in creating the shiny app was to preprocess the training data which consisted of several crawled texts from news websites, blogs and twitter messages.  
-For this we stipped out unwanted characters, numbers, URLs, twitter handles and more.
+For this we stripped out unwanted characters, numbers, URLs, twitter handles and more.
 
 In the app we provide two models that are based on the number of occurences of word sequences, called n-grams.
 A main pre-computation step consisted of counting the occurences and generating the appropriate probabilities needed for predicting the next words.
