@@ -43,11 +43,11 @@ The **stupid back-off** model which is very easy to implement delivers good resu
 
 In addition, we implemented the more advanced **modified Kneser-Ney approach** that also takes the surroundings of a word into account for computing the likelihood.
 
-Both approaches can be used to compute a score for each n-gram which can then later be used to make the suggestions for the next word.
+Both approaches can be used to compute a score for each n-gram (up to n=5) which can then later be used to make the suggestions for the next word.
 
 To reduce the storage requirements of our model we omitted lots of n-grams that did not occur often in our training set.
 The usage of the `data.table` package with it's binary index search enables super fast lookups of the suggestions: 
-less than $5\,\text{ms}$ on a sixyears old desktop computer.
+less than $5\,\text{ms}$ on a six years old desktop computer.
 
 For the interested user the app includes some mathematical background explanation for the used models.
 

@@ -163,6 +163,47 @@ D_{3+} &amp;= 3 - 4Y\frac{n_4}{n_3} \\
 \end{align}\]</span>
 <p>Note that <span class="math inline">\(n_1\ldots n_4\)</span> is defined for each <span class="math inline">\(n\)</span>-gram and, thus, also the <span class="math inline">\(D_1\)</span>, <span class="math inline">\(D_2\)</span> and <span class="math inline">\(D_{3+}\)</span> need to be understood as a discount for each <span class="math inline">\(n\)</span> (=<span class="math inline">\(n\)</span>-gram “level”).</p>
 </section>
+<section id="accuracy-timing" class="level2 unnumbered">
+<h2>Accuracy &amp; Timing</h2>
+<p>Both scores deliver very promising results.</p>
+<p>We use the benchmark from <a href="https://github.com/hfoffani/dsci-benchmark">Hernán Foffani</a> to measure accuracy, memory footprint and runtime.</p>
+<p>For the modified Kneser-Ney score we get the following picture:</p>
+<pre><code>Overall top-3 score:     17.67 %
+Overall top-1 precision: 12.97 %
+Overall top-3 precision: 21.66 %
+Average runtime:         3.27 msec
+Number of predictions:   28464
+Total memory used:       23.07 MB
+
+Dataset details
+ Dataset &quot;blogs&quot; (599 lines, 14587 words, hash 14b3c593e543eb8b2932cf00b646ed653e336897a03c82098b725e6e1f9b7aa2)
+  Score: 17.39 %, Top-1 precision: 12.79 %, Top-3 precision: 21.34 %
+ Dataset &quot;tweets&quot; (793 lines, 14071 words, hash 7fa3bf921c393fe7009bc60971b2bb8396414e7602bb4f409bed78c7192c30f4)
+  Score: 17.95 %, Top-1 precision: 13.15 %, Top-3 precision: 21.98 %
+
+
+R version 3.4.2 (2017-09-28), platform x86_64-apple-darwin15.6.0 (64-bit)
+Attached non-base packages:   stringi (v1.1.6), digest (v0.6.12), knitr (v1.17), ggplot2 (v2.2.1), ngram (v3.0.4), tm (v0.7-2), NLP (v0.1-11), markdown (v0.8), dplyr (v0.7.4), data.table (v1.10.4-3), shinydashboard (v0.6.1), shiny (v1.0.5)
+Unattached non-base packages: Rcpp (v0.12.14), highr (v0.6), plyr (v1.8.4), compiler (v3.4.2), bindr (v0.1), bitops (v1.0-6), tools (v3.4.2), gtable (v0.2.0), jsonlite (v1.5), evaluate (v0.10.1), tibble (v1.3.4), pkgconfig (v2.0.1), rlang (v0.1.4), rstudioapi (v0.7), yaml (v2.1.14), parallel (v3.4.2), bindrcpp (v0.2), stringr (v1.2.0), xml2 (v1.1.1), revealjs (v0.9), grid (v3.4.2), rprojroot (v1.2), glue (v1.2.0), R6 (v2.2.2), rmarkdown (v1.8), bookdown (v0.5), RJSONIO (v1.3-0), magrittr (v1.5), scales (v0.5.0), backports (v1.1.1), htmltools (v0.3.6), rsconnect (v0.8.5), assertthat (v0.2.0), colorspace (v1.3-2), mime (v0.5), xtable (v1.8-2), httpuv (v1.3.5), RCurl (v1.95-4.8), lazyeval (v0.2.1), munsell (v0.4.3), slam (v0.1-40)</code></pre>
+<p>The stupid back-off model gave slightly better top-1 scores but had slightly lower top-3 scores.</p>
+<pre><code>Overall top-3 score:     17.53 %
+Overall top-1 precision: 13.02 %
+Overall top-3 precision: 21.51 %
+Average runtime:         3.33 msec
+Number of predictions:   28464
+Total memory used:       23.07 MB
+
+Dataset details
+ Dataset &quot;blogs&quot; (599 lines, 14587 words, hash 14b3c593e543eb8b2932cf00b646ed653e336897a03c82098b725e6e1f9b7aa2)
+  Score: 17.15 %, Top-1 precision: 12.59 %, Top-3 precision: 21.25 %
+ Dataset &quot;tweets&quot; (793 lines, 14071 words, hash 7fa3bf921c393fe7009bc60971b2bb8396414e7602bb4f409bed78c7192c30f4)
+  Score: 17.91 %, Top-1 precision: 13.45 %, Top-3 precision: 21.76 %
+
+
+R version 3.4.2 (2017-09-28), platform x86_64-apple-darwin15.6.0 (64-bit)
+Attached non-base packages:   stringi (v1.1.6), digest (v0.6.12), knitr (v1.17), ggplot2 (v2.2.1), ngram (v3.0.4), tm (v0.7-2), NLP (v0.1-11), markdown (v0.8), dplyr (v0.7.4), data.table (v1.10.4-3), shinydashboard (v0.6.1), shiny (v1.0.5)
+Unattached non-base packages: Rcpp (v0.12.14), highr (v0.6), plyr (v1.8.4), compiler (v3.4.2), bindr (v0.1), bitops (v1.0-6), tools (v3.4.2), gtable (v0.2.0), jsonlite (v1.5), evaluate (v0.10.1), tibble (v1.3.4), pkgconfig (v2.0.1), rlang (v0.1.4), rstudioapi (v0.7), yaml (v2.1.14), parallel (v3.4.2), bindrcpp (v0.2), stringr (v1.2.0), xml2 (v1.1.1), revealjs (v0.9), grid (v3.4.2), rprojroot (v1.2), glue (v1.2.0), R6 (v2.2.2), rmarkdown (v1.8), bookdown (v0.5), RJSONIO (v1.3-0), magrittr (v1.5), scales (v0.5.0), backports (v1.1.1), htmltools (v0.3.6), rsconnect (v0.8.5), assertthat (v0.2.0), colorspace (v1.3-2), mime (v0.5), xtable (v1.8-2), httpuv (v1.3.5), RCurl (v1.95-4.8), lazyeval (v0.2.1), munsell (v0.4.3), slam (v0.1-40)</code></pre>
+</section>
 <section id="references" class="level2 unnumbered">
 <h2>References</h2>
 <div id="refs" class="references">

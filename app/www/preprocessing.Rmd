@@ -170,3 +170,31 @@ For the text files we used some regular expressions to remove
 Also, we converted all words to lower case.
 
 
+
+## Optimizations {-}
+In order to have a fast response time we used the `data.table` package that extends the standard data.frame in several ways.
+The best addition is the possibility to index certain columns which allows for extremely fast look-ups.
+The data.table uses binary search which operates super efficiently on sorted arrays.
+
+To minimize the memory footprint we only used n-grams that occured more than four times in our training set.
+We also removed entries for which the score was too bad within the group of word sequences that did only differ in the last word.
+This allowed the reduction to only 25MB of memory.
+If one would want to implent this for a mobile device, there would very likely be more room for improvements...
+
+The following graph shows the influence of the threshold on the accuracy scores calculated by the benchmark from [Hernán Foffani](https://github.com/hfoffani/dsci-benchmark).
+```{r, echo=FALSE, cache=TRUE}
+library(tidyr)
+benchmarks <- readRDS("../../data/final/en_US/benchmark_results.rds")
+benchmarks %>% 
+    gather(overall.score.percent, overall.precision.top1, overall.precision.top3, key = "score", value = "value") %>% 
+    ggplot(aes(x=threshold, y=value/100.0, group = score, color = score)) + 
+    geom_line() + 
+    labs(title = "Accuracy measures for different thresholds",
+         x = "Threshold",
+         y = "Score") +
+    scale_y_continuous(labels = scales::percent) +
+    scale_color_brewer(palette = "Dark2", 
+                       name="Measure type",
+                       labels = c("Top-1 Precision", "Top-3 Precision", "Top-3 Score"))
+```
+
