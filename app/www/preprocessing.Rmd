@@ -8,9 +8,165 @@ output:
     self_contained: yes
 ---
 
-## Cleansing the Strings {-}
+```{r libraries, warning=FALSE, echo=FALSE, include=FALSE}
+suppressPackageStartupMessages({
+library(tm)
+library(ngram)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+})
+```
+
+## Introduction {-}
+Predicting words is a task that can help a user when writing text on a mobile phone.
+With small displays it can be cumbersome and lengthy to write texts.
+Therefore, modern software keyboards offer some suggestions to the user that could be written next with one single click.
+The overall goal of the project is to develop an algorithm that predicts the next word a user will type on his mobile phone (or on a website) given this previous input.
+To achieve this, we will employ a machine learning algorithm that calculates the probabilities of the next word to be entered so the most likely word is suggested.
+Since the algorithm needs some data to learn from, we use the provided data set from [SwiftKey](https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip).
+
+
+## Information On The Training Set {-}
+The training set consists of three files for each language containing texts from news websites, blogs and twitter.
+```{r load_data, cache=TRUE, include=FALSE}
+en_us <- VCorpus(DirSource("../../data/final/en_US/", encoding = "UTF-8", pattern = "*.txt"))
+blogs <- en_us[[1]] %>% content
+news <- en_us[[2]] %>% content
+twitter <-en_us[[3]] %>% content
+```
+We will use the English language files in the following text.
+
+### General Properties {-}
+We first take a look at the general properties of the files provided in the data set before executing a deeper analysis of the content.
+```{r compute_summary, cache=TRUE, echo=FALSE}
+summary_blogs <- string.summary(concatenate(blogs))
+summary_news <- string.summary(concatenate(news))
+summary_twitter <- string.summary(concatenate(twitter))
+summary_all <- data.frame(set=c("blogs", "news", "twitter"), 
+                          lines=sapply(list(blogs, news, twitter), length),
+                          characters=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 1),
+                          letters=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 2),
+                          whitespace=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 3),
+                          punctuation=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 4),
+                          digits=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 5),
+                          words=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 6),
+                          sentences=sapply(list(summary_blogs, summary_news, summary_twitter), "[[", 7))
+```
+```{r, cache=TRUE, echo=FALSE}
+kable(summary_all, format = "html", table.attr = "class=\"table shiny-table table-hover spacing-m\", style=\"width:80%;\"")
+```
+
+
+From the table we can observe some interesting characteristics.
+For example the 140 character limit on twitter can clearly be observed.
+The file has the most lines of text but at the same time fewer chacters compared to the other files.
+In the news file the number of digits is more than twice the number compared to the other two files.
+This could be explained by the nature of the content as news articles often state precise numbers in the text.
 
 
 
 ## Tokenization {-}
+In this chapter we have a look at the frequencies of words and **n-grams**.
+An n-gram is a contiguous sequence of $n$ items - in our case words - which can be formed from the texts in our data set.
+
+To get an impression of the frequencies of words and n-grams, take 100000 random samples from each three data sets.
+```{r concatenate_all_data, cache=TRUE, include=FALSE}
+set.seed(1234)
+ all_data <- concatenate(concatenate(sample(blogs, 100000)), 
+                         concatenate(sample(news, 100000)), 
+                         concatenate(sample(twitter, 100000))) %>% preprocess()
+rm(blogs, news, twitter, en_us)
+invisible(gc())
+```
+
+### Frequencies Of Words {-}
+
+```{r plot_freq_1grams, cache=TRUE, echo=FALSE, fig.height=7}
+ng <- ngram(concatenate(all_data), n=1)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 25), aes(x=reorder(ngrams, freq), y=freq))
+rm(ng, pt)
+invisible(gc())
+g + geom_col() + labs(x="words", y="frequency", title="Top-25 most frequent words") + coord_flip()
+```
+
+The most frequent words in the data are common stop words, i.e. words that in some other natual language computing context are unwanted and should be removed.
+Examples are *the*, *and*, *of*, *to* and many more.
+In our case, however, they cannot be dropped as they are potential candidates for our prediction algorithm.
+
+
+### Analysis Of Bigrams (2-grams) {-}
+Now we look at the bigrams, i.e. couples of words.
+
+```{r plot_freq_2grams, cache=TRUE, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=2)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 10), aes(x=reorder(ngrams, freq), y=freq))
+rm(ng, pt)
+invisible(gc())
+g + geom_col() + labs(x="n-grams", y="frequency", title="Frequency of top-10 2-grams") + coord_flip()
+```
+
+One remarkable observation is that many bigrams contain the word "the" which is also the most frequent word.
+
+
+### Analysis of trigrams (3-grams) {-}
+
+```{r plot_freq_3grams, cache=TRUE, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=3)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 10), aes(x=reorder(ngrams, freq), y=freq))
+rm(ng, pt)
+invisible(gc())
+g + geom_col() +  labs(x="n-grams", y="frequency", title="Frequency of top-10 3-grams") + coord_flip()
+```
+
+Among the most frequent trigrams there already are some comon phases like "a lot of" or "one of the".
+
+
+### Analysis of four-grams (4-grams) {-}
+
+```{r plot_freq_4grams, cache=TRUE, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=4)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 10), aes(x=reorder(ngrams, freq), y=freq))
+rm(ng, pt)
+invisible(gc())
+g + geom_col() + labs(x="n-grams", y="frequency", title="Frequency of top-10 4-grams") + coord_flip()
+```
+
+### Analysis of five-grams (5-grams) {-}
+Finally, we have a look at the 5-grams for which we again provide the ten most frequent ones in the following figure.
+
+```{r plot_freq_5grams, cache=TRUE, echo=FALSE}
+ng <- ngram(concatenate(all_data), n=5)
+ng_size <- ng@ngsize
+pt <- get.phrasetable(ng)
+g <- ggplot(data=head(pt, 10), aes(x=reorder(ngrams, freq), y=freq))
+rm(ng, pt)
+invisible(gc())
+g + geom_col() + labs(x="n-grams", y="frequency", title="Frequency of top-10 5-grams") + coord_flip()
+```
+
+To see how the n-gram's frequencies can be used to calculate probabilities of words see the <a onclick="openTab('predictionalgos')">prediction algorithms</a> tab.
+
+
+## Cleansing The Strings {-}
+Every non-tidy data set needs some preprocessing steps to obtain a usable set of data to work with.
+For the text files we used some regular expressions to remove
+
+* URLs,
+* numbers,
+* twitter names and hashtags,
+* email adresses,
+* symbols,
+* punctuation.
+
+Also, we converted all words to lower case.
+
 

@@ -30,7 +30,7 @@ For this we stipped out unwanted characters, numbers, URLs, twitter handles and 
 In the app we provide two models that are based on the number of occurences of word sequences, called n-grams.
 A main pre-computation step consisted of counting the occurences and generating the appropriate probabilities needed for predicting the next words.
 
-A profanity filter function allows the user control over the suggestion of smear words.
+A profanity filter function (using the [Shutterstock lists](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words)) allows the user control over the suggestion of smear words.
 
 As an additional fun feature we included a *random babble* mode where the app generates random texts by continuing some user input with predicted words.
 
